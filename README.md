@@ -17,7 +17,7 @@
 
 P.S.  
   
-Вы будете благодарны себе если выполните инструкцию в точности как написано.123
+Вы будете благодарны себе если выполните инструкцию в точности как написано.
 
 P.S.S.
 - Если вы заметили не точность
@@ -166,6 +166,8 @@ P.S.S.
 <details>
   <summary>Ответ</summary>
 
+* Concurency is a composition of independenly executing computations (goroutines). It's not parallelism, although it enables parallelism. If you have only one processor, your program can still be concurunt but it cannot be parallel. On the other hand, a well-written concurunt program might run efficiently in parallel on a multiprocessor.
+* The GOMAXPROCS variable limits the number of operating system threads that can execute user-level Go code simultaneously. There is no limit to the number of threads that can be blocked in system calls on behalf of Go code; those do not count against the GOMAXPROCS limit. This package's GOMAXPROCS function queries and changes the limit.
 * Конкурентность обеспечивает выполнение нескольких задач посредством переключения контекста.
   Конкурентные вычисления реализуются на одном ядре системы. Как пример приведем тот же процесс ремонта, но с другими вводными условиями.
   Теперь мы имеем один объект, на который привлекаем специалистов разного профиля: по демонтажным работам, электрике, подготовке стен и полов, отделке.
@@ -1383,6 +1385,7 @@ P.S.S.
       Проблемы, такие как "гонка" (race conditions), могут возникнуть, если необходимая синхронизация между потоками
       не реализована правильно.
 
+    * Gouroutine - independently executing function, launched by a go statement. It has its own call stack, which grows and shrinks as required. It's very cheap. There might be one thread in program with thousands of gouroutines. Gouroutines are multiplexed dynamically onto threads as needed to keep all the goroutines running. 
     * Горутины — это абстракция, предоставляемая языком программирования Go, для создания легковесных потоков выполнения.
       Горутины работают на фоне операционных потоков, но управляются Go runtime, что делает их более легковесными и
       эффективными для многозадачности.
@@ -1526,7 +1529,7 @@ P.S.S.
       сколько горутин пытаются её выполнить.
 
     * channel:
-      Каналы в Go — это мощный примитив для синхронизации и передачи данных между горутинами. Они могут быть
+      Каналы в Go — это мощный примитив для синхронизации(небуферизированный канал) и передачи данных между горутинами. Они могут быть
       использованы как очереди сообщений или как семафоры.
 
     </details>
@@ -1538,7 +1541,7 @@ P.S.S.
     <details>
       <summary>Ответ</summary>
 
-    * channel - это абстракция Go, которая помогает горутинам общаться друг с другом, передавая по channel значения.
+    * channel - это абстракция Go, которая помогает горутинам общаться друг с другом, передавая по channel значения. Небуферизированный канал выполняет также функцию синхронизации. Буфферизированный - убирает синхронизацию.
       Канал можно представить как трубу, в которую одни горутины кладут данные, а другие их вычитывают. Под капотом
       channel представляет из себя 3 структуры (hchan, sudog, waitq). Наиболее интересной для нас является hchan, основные поля которой:
 
@@ -1679,7 +1682,22 @@ P.S.S.
 
   ---
 
-  - Вопрос №1: [ Как сделать select неблокирующим? ]
+  - Вопрос №1: [ что такое select? ]
+
+    <details>
+      <summary>Ответ</summary>
+
+    * select statement provides another way to handle multiple channels. It's like a switch, but each case is a communication:
+    * all channels are evaluated
+    * selection blocks until one communication can proceed, which then does
+    * if multiple can procedd, select chooses pseudo-randomly
+    * a default clause, if present, executes immediately if no channel is ready
+
+    </details>
+
+  ---
+
+    - Вопрос №2: [ Как сделать select неблокирующим? ]
 
     <details>
       <summary>Ответ</summary>
@@ -1692,7 +1710,7 @@ P.S.S.
 
   ---
 
-  - Вопрос №2: [ Какой порядок исполнения операций case в select? ]
+  - Вопрос №3: [ Какой порядок исполнения операций case в select? ]
 
     <details>
       <summary>Ответ</summary>
@@ -1939,6 +1957,325 @@ P.S.S.
 <!-- Практические задачи -->
 <details>
     <summary><h2><i>Практические задачи Golang</i></h2></summary>
+
+<!-- Указатели -->
+- <details>
+    <summary><h2><i>Указатели</i></h2></summary>
+
+  ---
+
+  - Вопрос №1: [ Что выведет код? (change pointer-1) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    func main() {
+      v := 5
+      p := &v
+      fmt.Println(*p)
+
+      changePointer(p)
+      fmt.Println(*p)
+    }
+
+    func changePointer(p *int) {
+      v := 3
+      p = &v
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    в го всё передается по значению, чтобы вернулась 3 во втором случае можно:
+    1. в changePointer вместо p = &v написать *p = v
+    2. func changePointer(p *int) *int {
+        v := 3
+        return &v
+      }
+      а в мейне p = changePointer(p)
+      
+    - Ответ: 5 5
+
+    </details>
+
+
+  -----
+
+  - Вопрос №2: [ Что выведет код? (change name) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    type Person struct {
+      Name string
+    }
+
+    func changeName(person *Person) {
+      person = &Person{
+        Name: "Olga",
+      }
+    }
+
+    func main() {
+      person := &Person{
+        Name: "Eugene",
+      }
+      fmt.Println(person.Name)
+      changeName(person)
+      fmt.Println(person.Name)
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    значение меняется только в самой функции changeName, снаружи эти изменения не видны. Чтобы поменять, нужно переписать функцию:
+    func changeName(person *Person) {
+      person.Name = "Olga"
+    }
+    - Ответ: Eugene Eugene
+
+    </details>  
+
+  </details> 
+
+
+
+<!-- Каналы -->
+- <details>
+    <summary><h2><i>Каналы</i></h2></summary>
+
+  ---
+
+  - Вопрос №1: [ Что выведет код? (канал с) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    func main() {
+      var c = make(C, 1)
+      c <- c
+      for i := 0; i < 1000; i++ {
+        select {
+        case <-c:
+        case <-c:
+          c <- c
+        default:
+          fmt.Println(i)
+          return
+        }
+      }
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    Создаем канал типа с состоящий из элементов с. Записываем канал в канал. Идем по циклу: два одинаковых case - будут выполнятся рандомно. При c <- c продолжится итерирование, потом, как выполнится чтение из канала - кейс 1 case <-c: , счетчик увеличится и на следующей итерации выйдет по дефолтному условию.
+      
+    - Ответ: любое число от 1 до 10
+
+    </details>
+
+  </details> 
+
+<!-- Интерфейсы -->
+- <details>
+    <summary><h2><i>Интерфейсы</i></h2></summary>
+
+  ---
+
+  - Вопрос №1: [ Что выведет код? (Интерфейсы nil) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+      "fmt"
+    )
+
+    type errorString struct {
+      s string
+    }
+
+    func (e errorString) Error() string {
+      return e.s
+    }
+
+    func checkErr(err error) {
+      fmt.Println(err == nil)
+    }
+
+    func main() {
+      var e1 error
+      checkErr(e1) 
+
+      var e *errorString
+      checkErr(e) 
+
+      e = &errorString{}
+      checkErr(e) 
+
+      e = nil
+      checkErr(e) 
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    1. инициализируется в nil как и слайсы. перемееная интерфейсоного типа error, у которой не определен ни тип, ни значение
+    2. определен реальный тип errorString. Получается сравниваем интерфейс у которого определен тип, но без значения с интерфейсом у которого не определен ни тип ни значение. не равны
+    3. слева определн и тип и значение, справа ни того, ни другого
+    4. присваивается той же переменной е: тип всё еще определен, а значение нил
+      
+    - Ответ: true false false false
+
+    </details>
+
+
+    -----
+
+    - Вопрос №2: [ Что выведет код? (ошибка на миллион) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+  
+    package main
+
+    import (
+      "fmt"
+    )
+
+    type myError struct {
+      code int
+    }
+
+    func (e myError) Error() string {
+      return fmt.Sprintf("code: %d", e.code)
+    }
+
+    func run() error {
+      var e *myError
+      if false {
+        e = &myError{code: 123}
+      }
+      return e
+    }
+
+    func main() {
+      err := run()
+      if err != nil {
+        fmt.Println("failed to run, error: ", err)
+      } else {
+        fmt.Println("success")
+      }
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    1. слева определн и тип и значение = нил, справа ни того, ни другого
+      
+    - Ответ: failed to run, error:  <nil>
+
+    </details>
+
+  </details> 
+
+<!-- JSON -->
+- <details>
+    <summary><h2><i>JSON</i></h2></summary>
+
+  ---
+
+  - Вопрос №1: [ Что выведет код? (JSON на внимательность) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+      "encoding/json"
+      "fmt"
+    )
+
+    type Data struct {
+      X int    `json:"x"`
+      y string `json:"y"`
+    }
+
+    func testData() {
+      in := Data{1, "two"}
+      fmt.Printf("%#v\n", in) // ?
+
+      encoded, _ := json.Marshal(in)
+      fmt.Println(string(encoded)) // ?
+
+      var out Data
+      json.Unmarshal(encoded, &out)
+      fmt.Printf("%#v\n", out) // ?
+    }
+
+    func main() {
+      testData()
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    Создаем экземпляр структуры с полями  in := Data{1, "two"} , %#v - формат для печати структуры с полями, напечатается.
+    При json.Marshal(in), приватное поле у не замаршалится, не будет напечатано.
+    Но при json.Unmarshal(encoded, &out) приватные поля печатаются с дефолтным значением - пустая строка
+      
+    - Ответ: 
+      main.Data{X:1, y:"two"}
+      {"x":1}
+      main.Data{X:1, y:""}
+
+    </details>
+
+  </details> 
 
 <!-- Замыкание -->
 - <details>
@@ -2463,6 +2800,106 @@ P.S.S.
       Срезы в Go являются ссылочным типом данных. Это значит, что при передаче среза в функцию и его изменении внутри этой
       функции, будет изменен и исходный срез. 
     - Ответ: 100
+
+    </details>
+
+  ---
+
+  - Вопрос №7: [ Что выведет код? (Изменение среза в append)] ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    func main() {
+      x := []int{}
+      x = append(x, 0)
+      x = append(x, 1)
+      x = append(x, 2)
+      y := append(x, 3)
+      z := append(x, 4)
+      fmt.Println(y, z)
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:  
+      . 
+    - Ответ: [0 1 2 4] [0 1 2 4]
+
+    </details>
+
+  ---
+
+    - Вопрос №8: [ Что выведет код? (Изменение среза в append)] ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    func main() {
+      x := []int{}
+      x = append(x, 0)
+      x = append(x, 1)
+      x = append(x, 2)
+      y := append(x, 3)
+      z := append(x, 4)
+      fmt.Println(y, z)
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:  
+      При append необходимо следить за capacity: если длина меньше, чем капасити, то массив шарится между слайсами. 
+    - Ответ: [0 1 2 4] [0 1 2 4]
+
+    </details>
+
+  ---
+
+  - Вопрос №9: [ Что выведет код? (Изменение среза в append-2)] ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    func main() {
+      x := []int{}
+      x = append(x, 0)
+      x = append(x, 1)
+      x = append(x, 2)
+      x = append(x, 3)
+      y := append(x, 4)
+      z := append(x, 5)
+      fmt.Println(y, z)
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:  
+      Длина равна капасити, при append выделяется новый массив и слайсы массив больше не шарят, у каждого свой массив, изменения в одном не влияют на изменения в другом
+    - Ответ: [0 1 2 3 4] [0 1 2 3 5]
 
     </details>
 
