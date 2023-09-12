@@ -1693,6 +1693,28 @@ P.S.S.
     * if multiple can procedd, select chooses pseudo-randomly
     * a default clause, if present, executes immediately if no channel is ready
 
+    ```go
+
+    package main
+
+    import "fmt"
+    
+    func main() {
+      select {
+        case v1 := <-c1:
+          fmt.Printf("received from c1")
+        case v2 := <-c2:
+          fmt.Printf("received from c2")
+        case c3 <- 23:
+          fmt.Printf("sent to c3")
+        default:
+          fmt.Printf("no one was ready to communicate")
+      }
+    }
+
+    ```
+
+
     </details>
 
   ---
