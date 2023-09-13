@@ -2223,6 +2223,198 @@ P.S.S.
 
     </details>
 
+---
+
+- Вопрос №2: [ Что выведет код? (буферезированный канал) ] 
+
+  <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+      "fmt"
+      "strconv"
+      "sync"
+    )
+
+    func main() {
+      var wg sync.WaitGroup
+      c := make(chan string, 3)
+
+      for i := 0; i < 5; i++ {
+        wg.Add(1)
+        go func(с chan<- string, i int, group *sync.WaitGroup) {
+          defer wg.Done()
+          с <- fmt.Sprintf("Goroutine %s", strconv.Itoa(i))
+        }(c, i, &wg)
+      }
+
+      for {
+        select {
+        case v := <-c:
+          fmt.Println(v)
+        }
+      }
+
+      wg.Wait()
+      close(c)
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    Создаем буф. канал, с буффером длины 3. В цикле запускаем 5 го рутин, в каждой пишем в канал. В бесконечном цикле читаем. 
+    3 строчки сразу записываются в канал, две дополнительные запишутся, если из канала прочитают. Читаем в цикле, до него мы дойдем, нас ничего не блокирует. Т.о. прочитаются все строчки, которые записшутся в канал. Далее  case зависнет, т.к. ничего больше в канал не пишем - произойдет deadlock
+      
+    - Ответ: 
+    Goroutine 4
+    Goroutine 1
+    Goroutine 0
+    Goroutine 2
+    Goroutine 3
+    T+00.000000001fatal error: all goroutines are asleep - deadlock!
+
+    </details>
+
+---
+
+- Вопрос №3: [ Что выведет код? () ] 
+
+  <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+      "fmt"
+      "time"
+    )
+
+    func run() {
+      var ch chan int
+      for i := 0; i < 3; i++ {
+        go func(idx int) {
+          ch <- (idx + 1) * 2
+        }(i)
+      }
+      fmt.Println("result:", <-ch)
+      time.Sleep(2 * time.Second)
+    }
+
+    func main() {
+      run()
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    канал не инициализирован, писать читать из nil канала - deadlock
+      
+    - Ответ: 
+    deadlock
+
+    </details>
+
+
+---
+
+- Вопрос №4: [ Что выведет код? () ] 
+
+  <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+      "fmt"
+    )
+
+    func run() {
+      ch := make(chan string)
+      go func() {
+        for m := range ch {
+          fmt.Println("processed:", m)
+        }
+      }()
+      ch <- "cmd.1"
+      ch <- "cmd.2"
+    }
+
+    func main() {
+      run()
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    из for m := range ch выходим если канал закрывается, здесь он не закрывается. Далее на строчке ch <- "cmd.2" main блокируется, т.к. канал не буфферизованный, пока не прочитали первую строчку, вторую записать не можем. Печатаем первую строку, отправляем вторую, но можем не успеть ее напечатать - никаких блокировок нет.
+      
+    - Ответ: 
+    processed: cmd.1 или 
+    processed: cmd.1
+    processed: cmd.2
+
+    </details>
+
+
+---
+
+- Вопрос №5: [ Что выведет код? () ] 
+
+  <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+      "fmt"
+    )
+
+    func main() {
+      timeStart := time.Now()
+      _, _ = <-worker(), <-worker()
+      fmt.Println(int(time.Since(timeStart).Seconds()))
+    }
+
+    func worker() chan int {
+      ch := make(chan int)
+      go func() {
+        time.Sleep(3 * time.Second)
+        ch <- 1
+      }()
+      return ch
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    Запускаем worker() два раза, последовательно, отдает канал, читаем из канала дважды, последовательно. Каждая конструкция <-worker() займет 3 сек., в сумме 6
+      
+    - Ответ: 6
+
+
+    </details>
+
+
   </details> 
 
 <!-- Интерфейсы -->
