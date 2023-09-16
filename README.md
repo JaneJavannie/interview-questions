@@ -2085,9 +2085,9 @@ P.S.S.
 - <details>
     <summary><h2><i>Указатели</i></h2></summary>
 
-  ---
+    ---
 
-  - Вопрос №1: [ Что выведет код? (change pointer-1) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+    - Вопрос №1: [ Что выведет код? (change pointer-1) ] ![Static Badge]  (https://img.shields.io/badge/Wow-yellow?color=yellow)
 
     <details>
       <summary>Код</summary>
@@ -2130,9 +2130,9 @@ P.S.S.
     </details>
 
 
-  -----
+    -----
 
-  - Вопрос №2: [ Что выведет код? (change name) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+    - Вопрос №2: [ Что выведет код? (change name) ] ![Static Badge](https://  img.shields.io/badge/Wow-yellow?color=yellow)
 
     <details>
       <summary>Код</summary>
@@ -2175,7 +2175,7 @@ P.S.S.
     - Ответ: Eugene Eugene
 
     </details>  
-
+    
   </details> 
 
 
@@ -2223,9 +2223,9 @@ P.S.S.
 
     </details>
 
----
+  ---
 
-- Вопрос №2: [ Что выведет код? (буферезированный канал) ] 
+  - Вопрос №2: [ Что выведет код? (буферезированный канал) ] 
 
   <details>
       <summary>Код</summary>
@@ -2281,9 +2281,9 @@ P.S.S.
 
     </details>
 
----
+  ---
 
-- Вопрос №3: [ Что выведет код? () ] 
+  - Вопрос №3: [ Что выведет код? () ] 
 
   <details>
       <summary>Код</summary>
@@ -2325,9 +2325,9 @@ P.S.S.
     </details>
 
 
----
+  ---
 
-- Вопрос №4: [ Что выведет код? () ] 
+  - Вопрос №4: [ Что выведет код? () ] 
 
   <details>
       <summary>Код</summary>
@@ -2371,9 +2371,9 @@ P.S.S.
     </details>
 
 
----
+  ---
 
-- Вопрос №5: [ Что выведет код? () ] 
+  - Вопрос №5: [ Что выведет код? () ] 
 
   <details>
       <summary>Код</summary>
@@ -2416,6 +2416,7 @@ P.S.S.
 
 
   </details> 
+</details>
 
 <!-- Интерфейсы -->
 - <details>
