@@ -165,7 +165,8 @@ P.S.S.
 
 <details>
   <summary>Ответ</summary>
-
+* Concurency is a composition of independenly executing computations (goroutines). It's not parallelism, although it enables parallelism. If you have only one processor, your program can still be concurunt but it cannot be parallel. On the other hand, a well-written concurunt program might run efficiently in parallel on a multiprocessor.
+* The GOMAXPROCS variable limits the number of operating system threads that can execute user-level Go code simultaneously. There is no limit to the number of threads that can be blocked in system calls on behalf of Go code; those do not count against the GOMAXPROCS limit. This package's GOMAXPROCS function queries and changes the limit.
 * Конкурентность обеспечивает выполнение нескольких задач посредством переключения контекста.
   Конкурентные вычисления реализуются на одном ядре системы. Как пример приведем тот же процесс ремонта, но с другими вводными условиями.
   Теперь мы имеем один объект, на который привлекаем специалистов разного профиля: по демонтажным работам, электрике, подготовке стен и полов, отделке.
