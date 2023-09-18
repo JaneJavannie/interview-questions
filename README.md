@@ -2153,105 +2153,6 @@ P.S.S.
 <details>
     <summary><h2><i>Практические задачи Golang</i></h2></summary>
 
-<!-- Указатели -->
-- <details>
-    <summary><h2><i>Указатели</i></h2></summary>
-
-    ---
-
-    - Вопрос №1: [ Что выведет код? (change pointer-1) ] ![Static Badge]  (https://img.shields.io/badge/Wow-yellow?color=yellow)
-
-    <details>
-      <summary>Код</summary>
-
-    ```go
-    package main
-
-    import "fmt"
-    
-    func main() {
-      v := 5
-      p := &v
-      fmt.Println(*p)
-
-      changePointer(p)
-      fmt.Println(*p)
-    }
-
-    func changePointer(p *int) {
-      v := 3
-      p = &v
-    }
-    ```
-    </details>
-
-    <details>
-      <summary>Ответ</summary>
-
-    - Пояснение:
-    в го всё передается по значению, чтобы вернулась 3 во втором случае можно:
-    1. в changePointer вместо p = &v написать *p = v
-    2. func changePointer(p *int) *int {
-        v := 3
-        return &v
-      }
-      а в мейне p = changePointer(p)
-      
-    - Ответ: 5 5
-
-    </details>
-
-
-    -----
-
-    - Вопрос №2: [ Что выведет код? (change name) ] ![Static Badge](https://  img.shields.io/badge/Wow-yellow?color=yellow)
-
-    <details>
-      <summary>Код</summary>
-
-    ```go
-    package main
-
-    import "fmt"
-    
-    type Person struct {
-      Name string
-    }
-
-    func changeName(person *Person) {
-      person = &Person{
-        Name: "Olga",
-      }
-    }
-
-    func main() {
-      person := &Person{
-        Name: "Eugene",
-      }
-      fmt.Println(person.Name)
-      changeName(person)
-      fmt.Println(person.Name)
-    }
-
-    ```
-    </details>
-
-    <details>
-      <summary>Ответ</summary>
-
-    - Пояснение:
-    значение меняется только в самой функции changeName, снаружи эти изменения не видны. Чтобы поменять, нужно переписать функцию:
-    func changeName(person *Person) {
-      person.Name = "Olga"
-    }
-    - Ответ: Eugene Eugene
-
-    </details>  
-    
-  </details> 
-
-
-
 <!-- Каналы -->
 - <details>
     <summary><h2><i>Каналы</i></h2></summary>
@@ -2488,7 +2389,7 @@ P.S.S.
 
 
   </details> 
-</details>
+
 
 <!-- Интерфейсы -->
 - <details>
@@ -3727,6 +3628,104 @@ P.S.S.
   ---
 
   </details>
+
+
+<!-- Указатели -->
+- <details>
+    <summary><h2><i>Еще указатели</i></h2></summary>
+
+    ---
+
+    - Вопрос №1: [ Что выведет код? (change pointer-1) ] ![Static Badge]  (https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    func main() {
+      v := 5
+      p := &v
+      fmt.Println(*p)
+
+      changePointer(p)
+      fmt.Println(*p)
+    }
+
+    func changePointer(p *int) {
+      v := 3
+      p = &v
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    в го всё передается по значению, чтобы вернулась 3 во втором случае можно:
+    1. в changePointer вместо p = &v написать *p = v
+    2. func changePointer(p *int) *int {
+        v := 3
+        return &v
+      }
+      а в мейне p = changePointer(p)
+      
+    - Ответ: 5 5
+
+    </details>
+
+
+    -----
+
+    - Вопрос №2: [ Что выведет код? (change name) ] ![Static Badge](https://  img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import "fmt"
+    
+    type Person struct {
+      Name string
+    }
+
+    func changeName(person *Person) {
+      person = &Person{
+        Name: "Olga",
+      }
+    }
+
+    func main() {
+      person := &Person{
+        Name: "Eugene",
+      }
+      fmt.Println(person.Name)
+      changeName(person)
+      fmt.Println(person.Name)
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:
+    значение меняется только в самой функции changeName, снаружи эти изменения не видны. Чтобы поменять, нужно переписать функцию:
+    func changeName(person *Person) {
+      person.Name = "Olga"
+    }
+    - Ответ: Eugene Eugene
+
+    </details>  
+    
+  </details> 
 
 </details>
 
