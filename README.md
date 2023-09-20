@@ -3334,7 +3334,7 @@ P.S.S.
 
   ---
 
-  - Вопрос №7: [ Что выведет код? (Изменение среза в append)] ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen)
+  - Вопрос №7: [ Что выведет код? (Изменение среза в append)]
 
     <details>
       <summary>Код</summary>
@@ -3349,6 +3349,7 @@ P.S.S.
       x = append(x, 0)
       x = append(x, 1)
       x = append(x, 2)
+
       y := append(x, 3)
       z := append(x, 4)
       fmt.Println(y, z)
@@ -3360,47 +3361,15 @@ P.S.S.
       <summary>Ответ</summary>
 
     - Пояснение:  
-      . 
+      При append необходимо следить за capacity: если длина меньше, чем капасити, то массив шарится между слайсами.  
     - Ответ: [0 1 2 4] [0 1 2 4]
 
     </details>
 
-  ---
-
-    - Вопрос №8: [ Что выведет код? (Изменение среза в append)] ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen)
-
-    <details>
-      <summary>Код</summary>
-
-    ```go
-    package main
-
-    import "fmt"
-    
-    func main() {
-      x := []int{}
-      x = append(x, 0)
-      x = append(x, 1)
-      x = append(x, 2)
-      y := append(x, 3)
-      z := append(x, 4)
-      fmt.Println(y, z)
-    }
-    ```
-    </details>
-
-    <details>
-      <summary>Ответ</summary>
-
-    - Пояснение:  
-      При append необходимо следить за capacity: если длина меньше, чем капасити, то массив шарится между слайсами. 
-    - Ответ: [0 1 2 4] [0 1 2 4]
-
-    </details>
 
   ---
 
-  - Вопрос №9: [ Что выведет код? (Изменение среза в append-2)] ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen)
+  - Вопрос №8: [ Что выведет код? (Изменение среза в append-2)] 
 
     <details>
       <summary>Код</summary>
@@ -3416,6 +3385,7 @@ P.S.S.
       x = append(x, 1)
       x = append(x, 2)
       x = append(x, 3)
+
       y := append(x, 4)
       z := append(x, 5)
       fmt.Println(y, z)
@@ -3429,6 +3399,118 @@ P.S.S.
     - Пояснение:  
       Длина равна капасити, при append выделяется новый массив и слайсы массив больше не шарят, у каждого свой массив, изменения в одном не влияют на изменения в другом
     - Ответ: [0 1 2 3 4] [0 1 2 3 5]
+
+    </details>
+
+  ---
+
+  - Вопрос №9: [ Что выведет код? ]
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+    	"fmt"
+    )
+
+    func main() {
+    	a := []int{1, 2, 3} 
+    	b := a              
+    	b = append(b, 4)    
+    	c := b              
+    	b[0] = 0            
+    	e := append(c, 5)   
+    	b[2] = 7            
+
+    	fmt.Println(a, b, c, e)
+    }
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:  
+      
+    - Ответ: [1 2 3] [0 2 7 4] [0 2 7 4] [0 2 7 4 5]
+
+    </details>
+
+  ---
+  - Вопрос №10: [ Что выведет код? ]
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+    	"fmt"
+    )
+
+    func testSlices1() {
+    	a := []string{"a", "b", "c"}
+    	b := a[1:2]
+    	b[0] = "q"
+
+    	fmt.Printf("%s\n", a) 
+    }
+
+    func main() {
+    	testSlices1()
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:  
+      
+    - Ответ: [a q c]
+
+    </details>
+
+  ---
+
+  - Вопрос №11: [ Что выведет код? ]
+
+    <details>
+      <summary>Код</summary>
+
+    ```go
+    package main
+
+    import (
+    	"fmt"
+    )
+
+    func testSlices2() {
+    	a := []byte{'a', 'b', 'c'}
+    	b := append(a[1:2], 'd')
+    	b[0] = 'z'
+
+    	fmt.Printf("%s\n", a) 
+    }
+
+    func main() {
+    	testSlices2()
+    }
+
+    ```
+    </details>
+
+    <details>
+      <summary>Ответ</summary>
+
+    - Пояснение:  
+      
+    - Ответ: azd
 
     </details>
 
