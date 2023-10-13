@@ -290,9 +290,18 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
+  * Прикладной уровень:
+    - HTTP/HTTPS (HyperText Transfer Protocol/Secure) — протокол передачи гипертекста.
+    - FTP (File Transfer Protocol) — протокол передачи файлов.
+    - SMTP (Simple Mail Transfer Protocol) — протокол для передачи электронной почты. POP3, IMAP
+    - DNS (Domain Name System) — система преобразования доменных имен в IP-адреса.
+    - MQTT (Message Queuing Telemetry Transport) — протокол мессенджинга для IoT устройств.
+    - Это далеко не исчерпывающий список, и существует множество других протоколов для различных специфических задач и сценариев использования.
+  
   * Транспортный уровень (как TCP и UDP):
     - SCTP (Stream Control Transmission Protocol) — протокол, предназначенный для передачи данных с поддержкой множественных потоков и устойчивый к ошибкам.
     - CCP (Datagram Congestion Control Protocol) — протокол, предназначенный для передачи потоковых медиа.
+    + TLS протокол защиты транспортного уровня / SSL (устарел) - уровень защищенных сокетов, поверх протокола TCP обеспечивает защищенное соединение (приватность, целостность данных, аутентификация), и уже с таким защищенным соединением работают протоколы прикладного уровня, н-р HTTPS 
   
   * Сетевой уровень:
     - IP (Internet Protocol) — протокол маршрутизации.
@@ -303,13 +312,6 @@ P.S.S.
     - Ethernet — наиболее распространенный протокол канального уровня.
     - Wi-Fi — набор стандартов для беспроводных локальных сетей.
   
-  * Прикладной уровень:
-    - HTTP/HTTPS (HyperText Transfer Protocol/Secure) — протокол передачи гипертекста.
-    - FTP (File Transfer Protocol) — протокол передачи файлов.
-    - SMTP (Simple Mail Transfer Protocol) — протокол для передачи электронной почты.
-    - DNS (Domain Name System) — система преобразования доменных имен в IP-адреса.
-    - MQTT (Message Queuing Telemetry Transport) — протокол мессенджинга для IoT устройств.
-    - Это далеко не исчерпывающий список, и существует множество других протоколов для различных специфических задач и сценариев использования.
   
   </details>
   
@@ -468,6 +470,65 @@ P.S.S.
   </details>
   
   ---
+  
+- Вопрос №12: [ Ограничения атомарных операций. CAS ]
+  
+  <details>
+    <summary>Ответ</summary>
+  
+  * Атомарными могут быть только некоторые операции, только некоторых типов данных, в основном int'овые. Например, нет атомарного mod или exp.
+    Как выход - использовать CAS - compare and swap atomic operation
+  * Операции производятся не по порядку. Например, операции с плавующей точкой являются не ассоциативными, т.е. (a+b)+c != a + (b+c)
+  	var a, b, c float64
+  	a = 1
+  	b = math.Pow(10 , 99)
+  	c = math.Pow(-10 , 99)
+  	aa := (a + b) + c // == 0
+  	bb := a + (b + c) // == 1
+  	
+  	---
+    отступление. 
+    Для float64 в golang нет функции AddFloat64 и нет и CompareAndSwap, но мы можем сконвертировать значение float64 в uint64 используя math.Float64bits и оперировать уже uint64 (https://habr.com/ru/articles/677332/).
+    
+    Реализация AddFloat64 может быть такой:
+    
+    func AddFloat64(addr *uint64, delta float64) uint64 {
+    	for {
+    		cur := atomic.LoadUint64(addr)
+    		curVal := math.Float64frombits(cur)
+    		nxtVal := curVal + delta
+    		nxt := math.Float64bits(nxtVal)
+    		if atomic.CompareAndSwapUint64(addr, cur, nxt) {
+    			return nxt
+    		}
+    	}
+    }
+    ---
+  	
+  * Медленная операция, т.к. сериализует доступ к памяти 
+  
+  * Compare and swap is a technique used when designing concurrent algorithms. Basically, compare and swap compares an expected value to the concrete value of a variable, and if the concrete value of the variable is equals to the expected value, swaps the value of the variable for a new variable.
+  * Check Then Act - Must Be Atomic
+  
+  * In computer science, compare-and-swap (CAS) is an atomic instruction used in multithreading to achieve synchronization. 
+    It compares the contents of a memory location with a given value and, only if they are the same, modifies the contents of that memory location to a new given value. 
+    This is done as a single atomic operation. The atomicity guarantees that the new value is calculated based on up-to-date information; if the value had been updated by another thread in the meantime, the write would fail. 
+    The result of the operation must indicate whether it performed the substitution; this can be done either with a simple boolean response (this variant is often called compare-and-set), or by returning the value read from the memory location (not the value written to it).
+    A compare-and-swap operation is an atomic version of the following pseudocode, where * denotes access through a pointer:[1]
+    
+    function cas(p: pointer to int, old: int, new: int) is
+        if *p ≠ old
+            return false
+        *p ← new
+        return true
+  
+    Algorithms built around CAS typically read some key memory location and remember the old value. 
+    Based on that old value, they compute some new value. Then they try to swap in the new value using CAS, where the comparison checks for the location still being equal to the old value. 
+    If CAS indicates that the attempt has failed, it has to be repeated from the beginning: the location is re-read, a new value is re-computed and the CAS is tried again. 
+    
+  </details>
+  
+  ---  
 
 </details>
 
@@ -723,12 +784,37 @@ P.S.S.
     Уровень изоляции SERIALIZABLE является самым строгим, потому что он не допускает возникновения всех четырех проблем параллельного одновременного конкурентного доступа, перечисленных ранее. Этот уровень устанавливает блокировку на всю область данных, считываемых соответствующей транзакцией. Поэтому этот уровень изоляции также предотвращает вставку новых строк другой транзакцией до тех пор, пока первая транзакция не будет подтверждена или отменена.\
     Уровень изоляции SERIALIZABLE реализуется, используя метод блокировки диапазона ключа. Суть этого метода заключается в блокировке отдельных строк включительно со всем диапазоном строк между ними. Блокировка диапазона ключа блокирует элементы индексов, а не определенные страницы или всю таблицу. В этом случае любые операции модификации другой транзакцией невозможны, вследствие невозможности выполнения требуемых изменений элементов индекса.\
     В заключение обсуждения четырех уровней изоляции следует упомянуть, что требуется знать, что чем выше уровень изоляции, тем меньше степень одновременного конкурентного доступа. Таким образом, уровень изоляции READ UNCOMMITTED меньше всего уменьшает одновременный конкурентный доступ. С другой стороны, он также предоставляет наименьшую изоляцию параллельных конкурентных транзакций. Уровень изоляции SERIALIZABLE наиболее сильно уменьшает степень одновременного конкурентного доступа, но гарантирует полную изоляцию параллельных конкурентных транзакций.
+    
+    Lost update предотвращается на всех уровнях изоляции (= Not Possible)
+  +------------------+--------------+----------------+--------------+ 
+  | Level            | Dirty read   | Non-repeatable |              |
+  |                  |               |     read        | Phantom    |
+  +------------------+--------------+----------------+--------------+
+  | READ UNCOMMITTED | Possible*    | Possible       | Possible     |
+  +------------------+--------------+----------------+--------------+
+  | READ COMMITTED   | Not Possible | Possible       | Possible     |
+  +------------------+--------------+----------------+--------------+
+  | REPEATABLE READ  | Not Possible | Not Possible   | Possible*    |
+  +------------------+--------------+----------------+--------------+
+  | SERIALIZABLE     | Not Possible | Not Possible   | Not Possible |
+  +------------------+--------------+----------------+--------------+
   
-  * Уровни изоляции определяют, как транзакции взаимодействуют друг с другом. ACID — это аббревиатура, обозначающая свойства транзакций:
+  * but not in PG
+  In PostgreSQL, you can request any of the four standard transaction isolation levels, but internally only three distinct isolation levels are implemented, i.e., PostgreSQL's Read Uncommitted mode behaves like Read Committed. This is because it is the only sensible way to map the standard isolation levels to PostgreSQL's multiversion concurrency control architecture.
+  The table also shows that PostgreSQL's Repeatable Read implementation does not allow phantom reads. This is acceptable under the SQL standard because the standard specifies which anomalies must not occur at certain isolation levels; higher guarantees are acceptable. The behavior of the available isolation levels is detailed in the following subsections.
+  Some PostgreSQL data types and functions have special rules regarding transactional behavior. In particular, changes made to a sequence (and therefore the counter of a column declared using serial) are immediately visible to all other transactions and are not rolled back if the transaction that made the changes aborts.
+  PostgreSQL uses Read Committed by default, whereas MySQL has chosen Repeatable Read, which is better isolated, but when PostgreSQL transactions use the Repeatable Read level, they’re more isolated than MySQL transactions.
+  
+  * Уровни изоляции определяют, как транзакции взаимодействуют друг с другом. ACID — это аббревиатура, обозначающая свойства транзакций.
+    Или можно сказать так: аббревиатура ACID обозначает совокупность гарантий относительно поведения базы данных при объединении нескольких действий в единую логическую операцию, которую часто называют транзакцией.
     - Atomicity (атомарность)
+        Атомарность гарантирует, что никакая транзакция не будет зафиксирована в системе частично. Будут либо выполнены все её подоперации, либо не выполнено ни одной. 
     - Consistency (согласованность)
+        Транзакция, достигающая своего нормального завершения (англ. end of transaction, EOT) и тем самым фиксирующая свои результаты, сохраняет согласованность базы данных. Другими словами, каждая успешная транзакция по определению фиксирует только допустимые результаты.
     - Isolation (изоляция)
+        Во время выполнения транзакции параллельные транзакции не должны оказывать влияния на её результат.
     - Durability (устойчивость)
+        Независимо от проблем на нижних уровнях (к примеру, обесточивание системы или сбои в оборудовании) изменения, сделанные успешно завершённой транзакцией, должны остаться сохранёнными после возвращения системы в работу. Другими словами, если пользователь получил подтверждение от системы, что транзакция выполнена, он может быть уверен, что сделанные им изменения не будут отменены из-за какого-либо сбоя.
   
   </details>
   
@@ -801,7 +887,94 @@ P.S.S.
   </details>
   
   ---
-
+  
+- Вопрос №11: [ Почему no sql быстрее? ]
+  
+  <details>
+    <summary>Ответ</summary>
+    
+  * базы данных SQL должны следовать правилам ACID (атомарность, согласованность, изоляция и долговечность), что может сделать их более медленными и сложными. С другой стороны, базы данных NoSQL часто более просты и могут быть быстрее, поскольку им не нужно следовать правилам ACID.
+  
+  </details>
+  
+  ---
+    
+- Вопрос №13: [ Какие виды индексов знаете ? расскажите про b tree индекс ]
+  
+  <details>
+    <summary>Ответ</summary>
+  * PostgreSQL поддерживает несколько типов индексов: B-дерево, хеш, GiST, SP-GiST, GIN и BRIN. Для разных типов индексов применяются разные алгоритмы, ориентированные на определённые типы запросов. По умолчанию команда CREATE INDEX создаёт индексы типа B-дерево, эффективные в большинстве случаев.
+    Семейство B-Tree индексов — это наиболее часто используемый тип индексов, организованных как сбалансированное дерево, упорядоченных ключей. Они поддерживаются практически всеми СУБД как реляционными, так нереляционными, и практически для всех типов данных.
+    Единственное, что, пожалуй, следует здесь отметить, это то, что данный тип индекса оптимален для множества с хорошим распределением значений и высокой мощностью(cardinality-количество уникальных значений).
+    B-деревья могут работать в условиях на равенство и в проверках диапазонов с данными, которые можно отсортировать в некотором порядке. Точнее, планировщик запросов PostgreSQL может задействовать индекс-B-дерево, когда индексируемый столбец участвует в сравнении с одним из следующих операторов: <   <=   =   >=   >
+    Хеш-индексы работают только с простыми условиями равенства. Планировщик запросов может применить хеш-индекс, только если индексируемый столбец участвует в сравнении с оператором =. 
+    Стандартный дистрибутив PostgreSQL включает классы операторов GiST для нескольких двумерных типов геометрических данных, что позволяет применять индексы в запросах с операторами: <<   &<   &>   >>   <<|   &<|   |&>   |>>   @>   <@   ~=   &&. GiST-индексы также могут оптимизировать поиск «ближайшего соседа»
+    SP-GiST позволяет организовывать на диске самые разные несбалансированные структуры данных, такие как деревья квадрантов, k-мерные и префиксные деревья.
+    GIN-индексы представляют собой «инвертированные индексы», в которых могут содержаться значения с несколькими ключами, например массивы. Инвертированный индекс содержит отдельный элемент для значения каждого компонента, и может эффективно работать в запросах, проверяющих присутствие определённых значений компонентов.
+    BRIN-индексы (сокращение от Block Range INdexes, Индексы зон блоков) хранят обобщённые сведения о значениях, находящихся в физически последовательно расположенных блоках таблицы. 
+    Partial index — это индекс, построенный на части таблицы, удовлетворяющей определенному условию самого индекса. Данный индекс создан для уменьшения размера индекса.
+    Function-based index. Самим же гибким типом индексов являются функциональные индексы, то есть индексы, ключи которых хранят результат пользовательских функций. Функциональные индексы часто строятся для полей, значения которых проходят предварительную обработку перед сравнением в команде SQL. Например, при сравнении строковых данных без учета регистра символов часто используется функция UPPER. Создание функционального индекса с функцией UPPER улучшает эффективность таких сравнений.
+    Кроме того, функциональный индекс может помочь реализовать любой другой отсутствующий тип индексов данной СУБД(кроме, пожалуй, битового индекса, например, Hash для Oracle)
+    
+                             |   MySQL	                  |  PostgreSQL	            | MS SQL	                       |    Oracle
+   --------------------------------------------------------------------------------------------------------------------------------------
+    B-Tree index	         |   Есть	                  |  Есть	                | Есть	                           |    Есть
+    --------------------------------------------------------------------------------------------------------------------------------------
+    Hash index	             |   в таблицах типа Memory	  |  Есть	                | Нет	                           |    Нет
+    --------------------------------------------------------------------------------------------------------------------------------------
+    Bitmap index	         |   Нет	                  |  Есть	                | Нет	                           |    Есть
+    --------------------------------------------------------------------------------------------------------------------------------------
+    Reverse index	         |   Нет	                  |  Нет	                | Нет	                           |    Есть
+    --------------------------------------------------------------------------------------------------------------------------------------
+    Inverted index	         |   Есть	                  |  Есть	                | Есть	                           |    Есть
+    --------------------------------------------------------------------------------------------------------------------------------------
+    Partial index	         |   Нет	                  |  Есть	                | Есть	                           |    Нет
+    --------------------------------------------------------------------------------------------------------------------------------------
+    Function based index     |   Нет	                  |  Есть	                | Есть	                           |    Есть
+    --------------------------------------------------------------------------------------------------------------------------------------
+    Поддерживаемые	         |   R-Tree с квадратичным    |   Rtree_GiST(исполь-    |  4-х уровневый Grid-based        |    R-Tree c квадратичным разбиением; Quadtree
+    пространственные         |   разбиением	              |  зуется линейное        |  spatial index (отдельные        |
+    индексы(Spatial indexes) |                            |                         |  разбиение) для географических и |
+                             |                            |                         |  геодезических данных)           |
+  </details>    
+  
+  ---
+      
+- Вопрос №14: [ CAP теорема ? ]
+  
+  <details>
+    <summary>Ответ</summary>
+    
+  * нельзя выполнить 3 из 3 
+    consistency
+    availabilty
+    partition tolerance
+    
+  </details>
+  
+  ---
+      
+- Вопрос №15: [ Распределенные транзакции 2PC и Saga ]
+  
+  <details>
+    <summary>Ответ</summary>
+  * другим приготовится - готовы - закоммитили (двухфазная фиксация)
+    Saga - подтверждает или откатывает
+    отличия - 2PC про изолированность транзакций, но медленнее
+  
+  </details>
+  
+  ---
+        
+- Вопрос №16: [  ]
+  
+  <details>
+    <summary>Ответ</summary>
+  * 
+  </details>
+  
+  ---
+  
 </details>
 
 <!-- Алгоритмы -->
