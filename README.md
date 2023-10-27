@@ -448,10 +448,51 @@ P.S.S.
   * Таким образом, основное различие между HTTP и HTTPS заключается в уровне безопасности. HTTPS рекомендуется для всех сайтов, особенно для тех, которые собирают и хранят конфиденциальную информацию.
   
   </details>
+
+    ---
+  
+- Вопрос №4: [ Различия между версиями протоколов http 1, 2, 3? ]
+  
+  <details>
+    <summary>Ответ</summary>
+  
+  * HTTP Version 1.0
+    * Header: only the method and the resource name composed an HTTP 0.9 request. HTTP 1.0, in turn, introduced the HTTP header, thus allowing the transmission of metadata that made the protocol flexible and extensible
+    * Versioning: the HTTP requests explicitly informs the employed version, appending it in the request line
+    * Status code: HTTP responses now contain a status code, thus enabling the receiver to check the request processing status (successful or failed)
+    * Content-type: thanks to the HTTP header, in specific to the Content-Type field, HTTP can transmit other documents types than a plain HTML file
+    * New methods: besides GET, HTTP 1.0 provides two new methods (POST and HEAD)
+    In summary, HTTP 1.0 got much more robust than the 0.9 version. The most responsible for the protocol improvements are the HTTP header and the new HTTP methods.
+
+  * HTTP Version 1.1
+    * Host header: HTTP 1.0 does not officially require the host header. HTTP 1.1 requires it by the specification. The host header is specially important to route messages through proxy servers, allowing to distinguish domains that point to the same IP
+    * Persistent connections: in HTTP 1.0, each request/response pair requires opening a new connection. In HTTP 1.1, it is possible to execute several requests using a single connection
+    * Continue status: to avoid servers refusing unprocessable requests,  now clients can first send only the request headers and check if they receive a continue status code (100) 
+    * New methods: besides the already available methods of HTTP 1.0, the 1.1 version added six extra methods: PUT, PATCH, DELETE, CONNECT, TRACE, and OPTIONS
+    * In addition to the highlighted enhancements, there are many others introduced in version 1.1 of HTTP, such as compression and decompression, multi-language support, and byte-range transfers.
+    Specifically, the new methods represented a real improvement in using HTTP.
+
+
+  * HTTP Version 2.0
+    * Request multiplexing: HTTP 1.1 is a sequential protocol. So, we can send a single request at a time. HTTP 2.0, in turn, allows to send requests and receive responses asynchronously. In this way, we can do multiple requests at the same time using a single connection
+    * Request prioritization: with HTTP 2.0, we can set a numeric prioritization in a batch of requests. Thus, we can be explicit in which order we expect the responses, such as getting a webpage CSS before its JS files
+    * Automatic compressing: in the previous version of HTTP (1.1), we must explicitly require the compression of requests and responses. HTTP 2.0, however, executes a GZip compression automatically
+    * Connection reset: a functionality that allows closing a connection between a server and a client for some reason, thus immediately opening a new one
+    * Server push: to avoid a server receiving lots of requests, HTTP 2.0 introduced a server push functionality. With that, the server tries to predict the resources that will be requested soon. So, the server proactively pushes these resources to the client cache
+    * Furthermore, HTTP 2.0 became a binary protocol, replacing the previous HTTP plain text versions. In summary, we can see HTTP 2.0 as a patch of enhancements to solve the problems and limitations of the last HTTP versions.
+
+
+  * HTTP Version 3.0
+    * The main difference between HTTP 2.0 and HTTP 3.0 is the employed transport layer protocol. In HTTP 2.0, we have TCP connections with or not TLS (HTTPS and HTTP). HTTP 3.0, in turn, is designed over QUIC (Quick UDP Internet Connections).
+    * QUIC, in short, is a transport layer protocol with native multiplexing and built-in encryption. QUIC provides a quick handshake process, besides being able to mitigate latency problems in lossy and slow connections.
+    * In addition to the potential benefits inherited from QUIC, another relevant characteristic of HTTP 3.0 is that it always creates encrypted connections. So, it is similar to always employing HTTPS in current HTTP 2.0.
+
+
+  </details>
   
   ---
   
-- Вопрос №4: [ Что произойдет если я введу некий адрес в строку поиска и нажму Enter? ]
+- Вопрос №5: [ Что произойдет если я введу некий адрес в строку поиска и нажму Enter? ]
   
   <details>
     <summary>Ответ</summary>
@@ -474,7 +515,7 @@ P.S.S.
   
   ---
   
-- Вопрос №5: [ Структура пакета HTTP. Методы HTTP. Статусы HTTP ]
+- Вопрос №6: [ Структура пакета HTTP. Методы HTTP. Статусы HTTP ]
   
   <details>
     <summary>Ответ</summary>
@@ -505,7 +546,7 @@ P.S.S.
   
   ---  
 
-- Вопрос №6: [ Сокеты. Web-сокеты ]
+- Вопрос №7: [ Сокеты. Web-сокеты ]
   
   <details>
     <summary>Ответ</summary>
@@ -536,7 +577,7 @@ P.S.S.
   
   ---
   
-- Вопрос №7: [ Что такое MAC-адрес? Для чего его используют? ]
+- Вопрос №8: [ Что такое MAC-адрес? Для чего его используют? ]
   
   <details>
     <summary>Ответ</summary>
@@ -549,7 +590,7 @@ P.S.S.
   
   ---
   
-- Вопрос №8: [ Что такое IP-адрес? ]
+- Вопрос №9: [ Что такое IP-адрес? ]
   
   <details>
     <summary>Ответ</summary>
@@ -562,7 +603,7 @@ P.S.S.
   
   ---
   
-- Вопрос №9: [ Что такое маска подсети? ]
+- Вопрос №10: [ Что такое маска подсети? ]
   
   <details>
     <summary>Ответ</summary>
@@ -582,7 +623,7 @@ P.S.S.
   
   ---
   
-- Вопрос №10: [ Что такое частный IP-адрес? В каких сценариях/проектах систем его следует использовать? ]
+- Вопрос №11: [ Что такое частный IP-адрес? В каких сценариях/проектах систем его следует использовать? ]
   
   <details>
     <summary>Ответ</summary>
@@ -609,7 +650,7 @@ P.S.S.
   
   ---
   
-- Вопрос №11: [ Какова функция протокола DHCP в сети? ]
+- Вопрос №12: [ Какова функция протокола DHCP в сети? ]
   
   <details>
     <summary>Ответ</summary>
@@ -620,7 +661,7 @@ P.S.S.
   
   ---
   
-- Вопрос №12: [ Объясните вкратце, как работает DNS  ]
+- Вопрос №13: [ Объясните вкратце, как работает DNS  ]
   
   <details>
     <summary>Ответ</summary>
@@ -634,7 +675,7 @@ P.S.S.
   
   ---
   
-- Вопрос №13: [ Какова роль маршрутизатора в сети? В чем разница между маршрутизатором и коммутатором? ]
+- Вопрос №14: [ Какова роль маршрутизатора в сети? В чем разница между маршрутизатором и коммутатором? ]
   
   <details>
     <summary>Ответ</summary>
@@ -1120,9 +1161,9 @@ P.S.S.
     1) Ключ идемпотентности
     Каждому шагу назначается ключ идемпотентности. Если что-то случится, вы должны иметь возможность повторить событие по этому ключу.
     Каждый сервис, который будет по цепочке получать запрос должен уметь понять, он раньше обрабатывал этот запрос или нет. Если он его раньше обрабатывал (проверка  происходит по этому ключу идемпотентности) — то он игнорирует запрос, а если нет — то выполняет.
-    1) Надежный канал доставки
+    2) Надежный канал доставки
     Событие должно быть доставлено как минимум 1 раз, возможность подписки, канал должен помнить о событиях некоторое время, если сервис упал он должен потом при   возможности перезапросить все события из канала.
-    1) Компенсация
+    3) Компенсация
     Должна быть возможность отменить шаги по ключу идемпотентности.
     Если, например, 1–2 шаги сделаны успешно а на 3-ем произошел сбой, то Сага должна откатить все предыдущие шаги (1 и 2) для атомарности данных.
   
