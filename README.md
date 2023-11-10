@@ -1255,9 +1255,9 @@ P.S.S.
       * обход по мапе в случайном порядке - нельзя будет использовать сортировку, сравнивать
   </details>
 
-      ---
+    ---
         
-- Вопрос №17: [ чем отличается unique index от primary key? ]
+- Вопрос №18: [ чем отличается unique index от primary key? ]
   
   <details>
     <summary>Ответ</summary>
@@ -1267,7 +1267,26 @@ P.S.S.
   </details>
   
   ---
+- Вопрос №19: [ advisory locks? ]
   
+  <details>
+    <summary>Ответ</summary>
+
+      * Блокировка произвольного идентификатора.
+        «Обычные» блокировки в PG всегда привязаны к конкретному объекту БД (таблице, записи, странице данных) и процессу, обслуживающему соединение. Advisory locks — тоже к процессу, но вместо реального объекта — абстрактный идентификатор, который можно задать как (bigint) или как (integer, integer).
+      * CAS-проверка возможности захвата блокировки. 
+        CAS — это Compare-and-Set, то есть проверка возможности захвата и сам захват блокировки проходят как одна атомарная операция, и между ними заведомо никто не может «вклиниться».
+      * Не-захват без исключений и ожиданий.
+        «Обычные» блокировки существуют в модели «Если уж ты попросил блокировку — то жди. Если не захотел ждать (NOWAIT, statement_timeout, lock_timeout) — вот тебе исключение». Этот подход сильно мешает внутри транзакции, потому что тогда приходится или реализовывать блок BEGIN-EXCEPTION-END для обработки, или откатывать (ROLLBACK) транзакцию.
+        Рекомендательные же блокировки, вызываемые try-функциями, просто возвращают TRUE/FALSE.     
+      
+      * advisory locks изначально были спроектированы с возможностью удержания блокировки и за рамками транзакции
+      
+            
+  </details>
+  
+  ---
+    
 </details>
 
 <!-- Алгоритмы -->
@@ -5108,6 +5127,38 @@ P.S.S.
     </details>
 
   ---
+
+  - Вопрос №2: [ pprof profiles ]
+
+    <details>
+      <summary>Ответ</summary>
+    
+       A Profile is a collection of stack traces showing the call sequences that led to instances of a particular event, such as allocation. 
+       Packages can create and maintain their own profiles; the most common use is for tracking resources that must be explicitly closed, such as files or network connections.
+       
+       Each Profile has a unique name. A few profiles are predefined:
+       
+       goroutine    - stack traces of all current goroutines
+       heap         - a sampling of all heap allocations
+       threadcreate - stack traces that led to the creation of new OS threads
+       block        - stack traces that led to blocking on synchronization primitives
+       mutex        - stack traces of holders of contended mutexes
+       There are 7 places you can get profiles in the default webserver: the ones mentioned above
+       
+       http://localhost:6060/debug/pprof/goroutine
+       http://localhost:6060/debug/pprof/heap
+       http://localhost:6060/debug/pprof/threadcreate
+       http://localhost:6060/debug/pprof/block
+       http://localhost:6060/debug/pprof/mutex
+       and also 2 more: the CPU profile and the CPU trace.
+       
+       http://localhost:6060/debug/pprof/profile
+       http://localhost:6060/debug/pprof/trace?seconds=5
+        
+    </details>
+
+  ---
+
 
   </details> 
 
