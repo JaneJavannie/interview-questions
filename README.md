@@ -63,10 +63,10 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Микросервисы — это подход к разработке программного обеспечения, при котором большое приложение разбивается на
-    меньшие, автономные компоненты. Каждый микросервис представляет собой отдельный модуль, который реализует определенный функционал и может
-    работать независимо от других модулей.
-    Эти модули обычно взаимодействуют друг с другом через API или событийно-ориентированную архитектуру.
+        * Микросервисы — это подход к разработке программного обеспечения, при котором большое приложение разбивается на
+          меньшие, автономные компоненты. Каждый микросервис представляет собой отдельный модуль, который реализует определенный функционал и может
+          работать независимо от других модулей.
+          Эти модули обычно взаимодействуют друг с другом через API или событийно-ориентированную архитектуру.
   
   </details>
   
@@ -99,6 +99,7 @@ P.S.S.
   * Консистентность данных в микросервисной архитектуре — сложная задача. Один из подходов — использование распределенных транзакций, но это может привести к проблемам производительности и доступности.
     Другой подход — "eventual consistency", где система стремится обеспечить консистентность данных в течение некоторого времени.
     Для этого часто используют шины сообщений и системы очередей, такие как Kafka или RabbitMQ, чтобы синхронизировать данные между сервисами.
+    
   </details>
   
   ---
@@ -115,6 +116,7 @@ P.S.S.
   * Преимущества:
     - Быстрый откат: Если в новой версии есть проблемы, можно быстро вернуться к старой версии.
     - Нулевое время простоя: Переключение трафика происходит мгновенно, что исключает простои.
+    
   </details>
   
   ---
@@ -205,20 +207,20 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * gRPC (gRPC Remote Procedure Calls) — это современный, открытый фреймворк для удаленного вызова процедур (RPC),
-    разработанный в Google. Он использует протокол HTTP/2 для транспорта и протокол Protocol Buffers (обычно сокращенно Protobuf)
-    для сериализации структурированных данных. gRPC предлагает множество особенностей, таких как двусторонняя потоковая передача данных,
-    мультиплексирование, аутентификация на основе SSL/TLS и другие.
-  * Основные особенности gRPC:
-    -  Постоянное соединение(?)
-    - Производительность: Благодаря HTTP/2 и Protocol Buffers gRPC обычно более производителен по сравнению с другими механизмами RPC или REST.
-    - Поддержка множества языков: gRPC имеет официальные библиотеки для большинства популярных языков программирования, включая Go, Java, C#, Node.js, Python и многие другие.
-    - Потоковая передача данных: gRPC поддерживает однонаправленную и двунаправленную потоковую передачу данных, что делает его очень гибким для построения сложных распределенных систем.
-    - Жестко типизированный протокол: Использование Protocol Buffers обеспечивает жесткую типизацию, что улучшает проверку данных и упрощает чтение кода.
-    - Плагинная архитектура: gRPC может быть расширен для поддержки различных методов аутентификации, балансировки нагрузки, повторных попыток и других сложных сценариев работы в сети.
-    - Богатый набор инструментов: Благодаря своей популярности и активному развитию, существует множество инструментов для мониторинга, трассировки и отладки gRPC-приложений.
-  
-  * gRPC часто используется в микросервисных архитектурах и в других распределенных системах, где требуется высокая производительность, надежная типизация и сложные сценарии взаимодействия между компонентами.
+      * gRPC (gRPC Remote Procedure Calls) — это современный, открытый фреймворк для удаленного вызова процедур (RPC),
+        разработанный в Google. Он использует протокол HTTP/2 для транспорта и протокол Protocol Buffers (обычно сокращенно Protobuf)
+        для сериализации структурированных данных. gRPC предлагает множество особенностей, таких как двусторонняя потоковая передача данных,
+        мультиплексирование, аутентификация на основе SSL/TLS и другие.
+      * Основные особенности gRPC:
+        - Постоянное соединение(?)
+        - Производительность: Благодаря HTTP/2 и Protocol Buffers gRPC обычно более производителен по сравнению с другими механизмами RPC или REST.
+        - Поддержка множества языков: gRPC имеет официальные библиотеки для большинства популярных языков программирования, включая Go, Java, C#, Node.js, Python и многие другие.
+        - Потоковая передача данных: gRPC поддерживает однонаправленную и двунаправленную потоковую передачу данных, что делает его очень гибким для построения сложных распределенных систем.
+        - Жестко типизированный протокол: Использование Protocol Buffers обеспечивает жесткую типизацию, что улучшает проверку данных и упрощает чтение кода.
+        - Плагинная архитектура: gRPC может быть расширен для поддержки различных методов аутентификации, балансировки нагрузки, повторных попыток и других сложных сценариев работы в сети.
+        - Богатый набор инструментов: Благодаря своей популярности и активному развитию, существует множество инструментов для мониторинга, трассировки и отладки gRPC-приложений.
+      
+      * gRPC часто используется в микросервисных архитектурах и в других распределенных системах, где требуется высокая производительность, надежная типизация и сложные сценарии взаимодействия между компонентами.
   
   </details>
   
@@ -255,14 +257,16 @@ P.S.S.
   
   ---
     
-- Вопрос №13: [ что такое service mash? ]
+- Вопрос №12: [ что такое service mash? ]
   
   <details>
     <summary>Ответ</summary>
   
   * Это инфраструктурный подход для решения задач взаимодействия между микросервисами. 
-    Суть подхода состоит в использовании специальных приложений-прокси (Sidecar) — они запускаются рядом с каждым сервисом, перехватывают его сетевые запросы и передают их "куда нужно".
-    Sidecar не только обрабатывают коммуникации между сервисами, но и производят мониторинг и устраняют проблемы безопасности, то есть все, что может быть абстрагировано от отдельных сервисов.
+    Суть подхода состоит в использовании специальных приложений-прокси (Sidecar) — они запускаются рядом с каждым сервисом, перехватывают его 
+        сетевые запросы и передают их "куда нужно".
+    Sidecar не только обрабатывают коммуникации между сервисами, но и производят мониторинг и устраняют проблемы безопасности, то есть все, что
+        может быть абстрагировано от отдельных сервисов.
     
     Mesh-сервис может предоставлять следующие возможности:
     - Шифрование.
@@ -293,68 +297,56 @@ P.S.S.
   
   ---
 
-- Вопрос №12: [ Ограничения атомарных операций. CAS ]
+- Вопрос №13: [ Ограничения атомарных операций. CAS ]
   
   <details>
     <summary>Ответ</summary>
   
-  * Атомарными могут быть только некоторые операции, только некоторых типов данных, в основном int'овые. Например, нет атомарного mod или exp.
-    Как выход - использовать CAS - compare and swap atomic operation
-  * Операции производятся не по порядку. Например, операции с плавующей точкой являются не ассоциативными, т.е. (a+b)+c != a + (b+c)
-  	```go
-  	    var a, b, c float64
-  	    a = 1
-  	    b = math.Pow(10 , 99)
-  	    c = math.Pow(-10 , 99)
-  	    aa := (a + b) + c // == 0
-  	    bb := a + (b + c) // == 1
-  	```
-   
-    отступление. 
-    Для float64 в golang нет функции AddFloat64 и нет и CompareAndSwap, но мы можем сконвертировать значение float64 в uint64 используя math.Float64bits и оперировать уже uint64 (https://habr.com/ru/articles/677332/).
+    * Атомарными могут быть только некоторые операции, только некоторых типов данных, в основном int'овые. Например, нет атомарного mod или exp.
+      Как выход - использовать CAS - compare and swap atomic operation
+    * Операции производятся не по порядку. Например, операции с плавующей точкой являются не ассоциативными, т.е. (a+b)+c != a + (b+c)
+    	```go
+    	    var a, b, c float64
+    	    a = 1
+    	    b = math.Pow(10 , 99)
+    	    c = math.Pow(-10 , 99)
+    	    aa := (a + b) + c // == 0
+    	    bb := a + (b + c) // == 1
+    	```
+    * Медленная операция, т.к. сериализует доступ к памяти 
     
-    Реализация AddFloat64 может быть такой:
-    ```go
-        func AddFloat64(addr *uint64, delta float64) uint64 {
-        	for {
-        		cur := atomic.LoadUint64(addr)
-        		curVal := math.Float64frombits(cur)
-        		nxtVal := curVal + delta
-        		nxt := math.Float64bits(nxtVal)
-        		if atomic.CompareAndSwapUint64(addr, cur, nxt) {
-        			return nxt
-        		}
-        	}
-        }
-    ```
-
-  * Медленная операция, т.к. сериализует доступ к памяти 
-  
-  * Compare and swap is a technique used when designing concurrent algorithms. Basically, compare and swap compares an expected value to the concrete value of a variable, and if the concrete value of the variable is equals to the expected value, swaps the value of the variable for a new variable.
-  * Check Then Act - Must Be Atomic
-  
-  * In computer science, compare-and-swap (CAS) is an atomic instruction used in multithreading to achieve synchronization. 
-    It compares the contents of a memory location with a given value and, only if they are the same, modifies the contents of that memory location to a new given value. 
-    This is done as a single atomic operation. The atomicity guarantees that the new value is calculated based on up-to-date information; if the value had been updated by another thread in the meantime, the write would fail. 
-    The result of the operation must indicate whether it performed the substitution; this can be done either with a simple boolean response (this variant is often called compare-and-set), or by returning the value read from the memory location (not the value written to it).
-    A compare-and-swap operation is an atomic version of the following pseudocode, where * denotes access through a pointer:[1]
+    * Compare and swap is a technique used when designing concurrent algorithms. Basically, compare and swap compares an expected value 
+        to the concrete value of a variable, and if the concrete value of the variable is equals to the expected value, 
+        swaps the value of the variable for a new variable.
+    * Check Then Act - Must Be Atomic
     
-    function cas(p: pointer to int, old: int, new: int) is
-        if *p ≠ old
-            return false
-        *p ← new
-        return true
-  
-    Algorithms built around CAS typically read some key memory location and remember the old value. 
-    Based on that old value, they compute some new value. Then they try to swap in the new value using CAS, where the comparison checks for the location still being equal to the old value. 
-    If CAS indicates that the attempt has failed, it has to be repeated from the beginning: the location is re-read, a new value is re-computed and the CAS is tried again. 
+    * In computer science, compare-and-swap (CAS) is an atomic instruction used in multithreading to achieve synchronization. 
+      It compares the contents of a memory location with a given value and, only if they are the same, 
+      modifies the contents of that memory location to a new given value. 
+     This is done as a single atomic operation. The atomicity guarantees that the new value is calculated based on up-to-date information; 
+     if the value had been updated by another thread in the meantime, the write would fail. 
+        The result of the operation must indicate whether it performed the substitution; 
+        this can be done either with a simple boolean response (this variant is often called compare-and-set), 
+        or by returning the value read from the memory location (not the value written to it).
+        A compare-and-swap operation is an atomic version of the following pseudocode, where * denotes access through a pointer:[1]
+        
+        function cas(p: pointer to int, old: int, new: int) is
+            if *p ≠ old
+                return false
+            *p ← new
+            return true
     
+        Algorithms built around CAS typically read some key memory location and remember the old value. 
+        Based on that old value, they compute some new value. Then they try to swap in the new value using CAS, 
+        where the comparison checks for the location still being equal to the old value. 
+        If CAS indicates that the attempt has failed, it has to be repeated from the beginning: 
+        the location is re-read, a new value is re-computed and the CAS is tried again. 
+        
   </details>
-  
   
   ---
     
-- Вопрос №13: [ Отличия и сходства REST от RPC ]
+- Вопрос №14: [ Отличия и сходства REST от RPC ]
 
     <details>
       <summary>Ответ</summary>
@@ -363,24 +355,32 @@ P.S.S.
         * Сходства: Абстрагирование, HTTP в качестве базового протокола + JSON в качестве формата сообщения, Совместимость с другими языками
         
         
-        	                    | RPC	                                                                | REST
-       ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-       Что это                  | Система, позволяющая удаленному клиенту  	                            | Набор правил, определяющих структурированный обмен данными между клиентом и сервером.
-                                | вызвать процедуру на сервере так, как если бы она была локальной.     |
-       Используется для	        | Выполнения действий на удаленном сервере.	                            | Операций создания, чтения, обновления и удаления (CRUD) на удаленных объектах.
-                                |                                                                       |
-       Лучше всего применять    |	Когда требуются сложные вычисления или запуск удаленного 	        | Когда требуется единообразное представление серверных данных и структур данных.
-                                | процесса на сервере.                                                  |
-       Фиксация состояния	    | С фиксацией состояния или без нее.	                                | Без фиксации состояния.
-                                |                                                                       |
-       Формат передачи данных   |	В последовательной структуре, определяемой сервером 	            | В структуре, определяемой сервером самостоятельно. В пределах одного API можно передавать различные форматы.
-                                | и обязательной для клиента.
+        	                    | RPC	                                                   | REST
+      -------------------------------------------------------------------------------------------------------------------------------------------
+       Что это                  | Система, позволяющая удаленному клиенту  	               | Набор правил, определяющих структурированный
+                                |                                                          | обмен данными между клиентом и сервером.
+      -------------------------------------------------------------------------------------------------------------------------------------------
+                                | вызвать процедуру на сервере так,                        | Операций создания, чтения, обновления и
+       Используется для	        | как если бы она была локальной.	                       | удаления (CRUD) на удаленных объектах. 
+                                | Выполнения действий на удаленном сервере.                |  
+      -------------------------------------------------------------------------------------------------------------------------------------------
+       Лучше всего применять    |	Когда требуются сложные вычисления  	               | Когда требуется единообразное 
+                                |   или запуск удаленного процесса на сервере.             | представление серверных данных и                                                    |                                                          | структур данных.
+      -------------------------------------------------------------------------------------------------------------------------------------------
+       Фиксация состояния	    | С фиксацией состояния или без нее.	                   | Без фиксации состояния. Сервер не хранит
+                                |                                                          | никаких записей о состоянии клиента 
+                                |                                                          | между клиентскими запросами. 
+      -------------------------------------------------------------------------------------------------------------------------------------------
+       Формат передачи данных   | В последовательной структуре, определяемой сервером      | В структуре, определяемой сервером 
+                                | и обязательной для клиента.                              | самостоятельно. В пределах одного API
+                                                                                           | можно передавать различные форматы.
+      -------------------------------------------------------------------------------------------------------------------------------------------
     
     </details>
   
   ---  
     
-- Вопрос №: [ анализ сложности алгоритмов ]
+- Вопрос №15: [ анализ сложности алгоритмов ]
     
     <details>
       <summary>Ответ</summary>
@@ -393,9 +393,43 @@ P.S.S.
             Асимптотическая оценка даёт нам примерное представление, при каком размере задачи (того самого n, от которого зависит функция сложности), можно ожидать приемлемой скорости выполнения.
     
     </details>
+   
+   --- 
+    
+- Вопрос №16: [ Идемпотентность в REST ]
+    
+    <details>
+      <summary>Ответ</summary>
+    
+    * Операция идемпотентна, если результат отправки множества запросов такой же, как и от одного.
+      
+    * Безопасные методы идемпотентны и не изменяют состояние сервера. Методы GET, HEAD, PUT и DELETE — безопасные, следовательно, идемпотентные. 
+        Метод POST неиндемпотентный, следовательно, небезопасный. Получается, что в RESTful CRUD:
+      - 1 неидемпотентный метод POST.
+      - 1 безопасный метод GET.
+      - 2 идемпотентных метода PUT и DELETE.
+    
+    </details>
+ 
+  --- 
+     
+- Вопрос №: [  ]
+     
+     <details>
+       <summary>Ответ</summary>
+     
+     * 
+     
+     </details>
+ 
+    
   
-  ---  
 </details>
+
+
+
+
+
 
 <!-- Сеть и всё что с ней связано -->
 <details>
@@ -408,20 +442,20 @@ P.S.S.
   <details>
      <summary>Ответ</summary>
   
-  * TCP (Transmission Control Protocol)
-    - Ориентирован на установление надежного соединения.
-    - Ошибки корректируются; потерянные или поврежденные пакеты пересылаются.
-    - Поддерживает управление потоком и перегрузкой.
-    - Нормально работает в условиях высокой задержки.
-  
-  * UDP (User Datagram Protocol)
-    - Безусловный протокол, не устанавливает соединение.
-    - Ошибки не корректируются; потерянные пакеты не восстанавливаются.
-    - Не поддерживает управление потоком и перегрузкой.
-    - Обычно быстрее, чем TCP.
-  
-  * Когда UDP предпочтительнее:
-    - Потоковое медиа, онлайн-игры, VoIP — там, где задержка критична и потеря пакетов допустима.
+        * TCP (Transmission Control Protocol)
+          - Ориентирован на установление надежного соединения.
+          - Ошибки корректируются; потерянные или поврежденные пакеты пересылаются.
+          - Поддерживает управление потоком и перегрузкой.
+          - Нормально работает в условиях высокой задержки.
+        
+        * UDP (User Datagram Protocol)
+          - Безусловный протокол, не устанавливает соединение.
+          - Ошибки не корректируются; потерянные пакеты не восстанавливаются.
+          - Не поддерживает управление потоком и перегрузкой.
+          - Обычно быстрее, чем TCP.
+        
+        * Когда UDP предпочтительнее:
+          - Потоковое медиа, онлайн-игры, VoIP — там, где задержка критична и потеря пакетов допустима.
   </details>
   
   ---
@@ -431,42 +465,45 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Прикладной уровень:
-    - HTTP/HTTPS (HyperText Transfer Protocol/Secure) — протокол передачи гипертекста.
-    - FTP (File Transfer Protocol) — протокол передачи файлов.
-    - SMTP (Simple Mail Transfer Protocol) — протокол для передачи электронной почты. POP3, IMAP
-    - DNS (Domain Name System) — система преобразования доменных имен в IP-адреса.
-    - MQTT (Message Queuing Telemetry Transport) — протокол мессенджинга для IoT устройств.
-    - Это далеко не исчерпывающий список, и существует множество других протоколов для различных специфических задач и сценариев использования.
-  
-  * Транспортный уровень (как TCP и UDP):
-    - SCTP (Stream Control Transmission Protocol) — протокол, предназначенный для передачи данных с поддержкой множественных потоков и устойчивый к ошибкам.
-    - CCP (Datagram Congestion Control Protocol) — протокол, предназначенный для передачи потоковых медиа.
-    + TLS протокол защиты транспортного уровня / SSL (устарел) - уровень защищенных сокетов, поверх протокола TCP обеспечивает защищенное соединение (приватность, целостность данных, аутентификация), и уже с таким защищенным соединением работают протоколы прикладного уровня, н-р HTTPS 
-  
-  * Сетевой уровень:
-    - IP (Internet Protocol) — протокол маршрутизации.
-    - ICMP (Internet Control Message Protocol) — протокол управляющих сообщений.
-    - OSPF (Open Shortest Path First) — протокол динамической маршрутизации.
-    - ARP (Address Resolution Protocol) – протокол разрешения адресов. Протокол ARP позволяет автоматически определить MAC-адрес компьютера по его IP адресу. ARP работает в режиме запрос-ответ. 
-      - Добровольный ARP-запрос (Gratuitous ARP):
-        • Запрос собственного IP-адреса
-        • Используется при назначении нового IP-адреса для быстрого оповещения всех компьютеров в сети
-        • Предотвращение использования одинаковых IP адресов в сети
-    - DHCP (Dynamic Host Configuration Protocol) протокол динамической конфигурации хостов
-      - Позволяет назначать IP адреса компьютерам в сети автоматически
-      - Требует создания инфраструктуры (DHCP сервер)
-      - IP адреса компьютеров могут меняться. Архитектура клиент сервер - в режиме запрос-ответ. 
-      - DHCP сервер следит за уникальностью распределения адресов.
-      - discover - offer - request - ack
-  
-  * Канальный уровень:
-    - Ethernet — наиболее распространенный протокол канального уровня.
-    - Wi-Fi — набор стандартов для беспроводных локальных сетей.
-    - DSL
-  
-  
-  </details>
+       * Прикладной уровень:
+         - HTTP/HTTPS (HyperText Transfer Protocol/Secure) — протокол передачи гипертекста.
+         - FTP (File Transfer Protocol) — протокол передачи файлов.
+         - SMTP (Simple Mail Transfer Protocol) — протокол для передачи электронной почты. POP3, IMAP
+         - DNS (Domain Name System) — система преобразования доменных имен в IP-адреса.
+         - MQTT (Message Queuing Telemetry Transport) — протокол мессенджинга для IoT устройств.
+         - Это далеко не исчерпывающий список, и существует множество других протоколов для различных специфических задач и сценариев использования.
+       
+       * Транспортный уровень (как TCP и UDP):
+         - SCTP (Stream Control Transmission Protocol) — протокол, предназначенный для передачи данных с поддержкой множественных потоков 
+          и устойчивый к ошибкам.
+         - CCP (Datagram Congestion Control Protocol) — протокол, предназначенный для передачи потоковых медиа.
+         + TLS протокол защиты транспортного уровня / SSL (устарел) - уровень защищенных сокетов, поверх протокола TCP обеспечивает 
+          защищенное соединение (приватность, целостность данных, аутентификация), и уже с таким защищенным соединением работают 
+           протоколы прикладного уровня, н-р HTTPS 
+       
+       * Сетевой уровень:
+         - IP (Internet Protocol) — протокол маршрутизации.
+         - ICMP (Internet Control Message Protocol) — протокол управляющих сообщений.
+         - OSPF (Open Shortest Path First) — протокол динамической маршрутизации.
+         - ARP (Address Resolution Protocol) – протокол разрешения адресов. Протокол ARP позволяет автоматически определить MAC-адрес 
+          компьютера по его IP адресу. ARP работает в режиме запрос-ответ. 
+           - Добровольный ARP-запрос (Gratuitous ARP):
+             • Запрос собственного IP-адреса
+             • Используется при назначении нового IP-адреса для быстрого оповещения всех компьютеров в сети
+             • Предотвращение использования одинаковых IP адресов в сети
+         - DHCP (Dynamic Host Configuration Protocol) протокол динамической конфигурации хостов
+           - Позволяет назначать IP адреса компьютерам в сети автоматически
+           - Требует создания инфраструктуры (DHCP сервер)
+           - IP адреса компьютеров могут меняться. Архитектура клиент сервер - в режиме запрос-ответ. 
+           - DHCP сервер следит за уникальностью распределения адресов.
+           - discover - offer - request - ack
+       
+       * Канальный уровень:
+         - Ethernet — наиболее распространенный протокол канального уровня.
+         - Wi-Fi — набор стандартов для беспроводных локальных сетей.
+         - DSL
+
+    </details>
   
   ---
   
@@ -475,62 +512,82 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * HTTP (HyperText Transfer Protocol) и HTTPS (HyperText Transfer Protocol Secure) — это протоколы, используемые для
-    передачи данных между веб-браузером и веб-сервером. Оба протокола используются в Интернете для загрузки и отправки
-    веб-страниц, файлов, изображений и других ресурсов.
-  
-  * Основные различия между HTTP и HTTPS:
-    - Безопасность: Самое основное различие — уровень безопасности. HTTPS использует SSL/TLS протоколы для шифрования данных, что делает его надежнее для передачи конфиденциальной информации, такой как пароли, номера кредитных карт и т.д.
-    - Порт: По умолчанию HTTP использует порт 80, а HTTPS — порт 443.
-    - Скорость: Из-за дополнительного слоя шифрования HTTPS может быть немного медленнее, чем HTTP. Однако современные оптимизации и широкая поддержка HTTP/2 сильно уменьшают этот разрыв.
-    - SEO: Поисковые системы, такие как Google, предпочитают сайты, использующие HTTPS, и могут выставлять их выше в результатах поиска.
-    - Индикатор безопасности: В адресной строке браузера сайты, использующие HTTPS, обычно отображаются с зеленым замком или другим индикатором безопасности.
-    - Сертификаты: Для работы с HTTPS требуется SSL-сертификат, который подтверждает, что данный веб-сервер действительно принадлежит указанному домену.
-    - Данные в URL: В HTTPS параметры в URL также шифруются, в отличие от HTTP, где они могут быть прочитаны.
-    - Промежуточные узлы: HTTPS затрудняет просмотр или модификацию передаваемых данных третьими сторонами (например, ман-в-середине атаки), поскольку данные шифруются.
-  
-  * Таким образом, основное различие между HTTP и HTTPS заключается в уровне безопасности. HTTPS рекомендуется для всех сайтов, особенно для тех, которые собирают и хранят конфиденциальную информацию.
-  
+       * HTTP (HyperText Transfer Protocol) и HTTPS (HyperText Transfer Protocol Secure) — это протоколы, используемые для
+         передачи данных между веб-браузером и веб-сервером. Оба протокола используются в Интернете для загрузки и отправки
+         веб-страниц, файлов, изображений и других ресурсов.
+       
+       * Основные различия между HTTP и HTTPS:
+         - Безопасность: Самое основное различие — уровень безопасности. HTTPS использует SSL/TLS протоколы для шифрования данных, что делает его надежнее для передачи конфиденциальной информации, такой как пароли, номера кредитных карт и т.д.
+         - Порт: По умолчанию HTTP использует порт 80, а HTTPS — порт 443.
+         - Скорость: Из-за дополнительного слоя шифрования HTTPS может быть немного медленнее, чем HTTP. Однако современные оптимизации и широкая поддержка HTTP/2 сильно уменьшают этот разрыв.
+         - SEO: Поисковые системы, такие как Google, предпочитают сайты, использующие HTTPS, и могут выставлять их выше в результатах поиска.
+         - Индикатор безопасности: В адресной строке браузера сайты, использующие HTTPS, обычно отображаются с зеленым замком или другим индикатором безопасности.
+         - Сертификаты: Для работы с HTTPS требуется SSL-сертификат, который подтверждает, что данный веб-сервер действительно принадлежит указанному домену.
+         - Данные в URL: В HTTPS параметры в URL также шифруются, в отличие от HTTP, где они могут быть прочитаны.
+         - Промежуточные узлы: HTTPS затрудняет просмотр или модификацию передаваемых данных третьими сторонами (например, ман-в-середине атаки), поскольку данные шифруются.
+       
+       * Таким образом, основное различие между HTTP и HTTPS заключается в уровне безопасности. HTTPS рекомендуется для всех сайтов, особенно для тех, которые собирают и хранят конфиденциальную информацию.
+       
   </details>
 
-    ---
+  ---
   
 - Вопрос №4: [ Различия между версиями протоколов http 1, 2, 3? ]
   
   <details>
     <summary>Ответ</summary>
   
-  * HTTP Version 1.0
-    * Header: only the method and the resource name composed an HTTP 0.9 request. HTTP 1.0, in turn, introduced the HTTP header, thus allowing the transmission of metadata that made the protocol flexible and extensible
-    * Versioning: the HTTP requests explicitly informs the employed version, appending it in the request line
-    * Status code: HTTP responses now contain a status code, thus enabling the receiver to check the request processing status (successful or failed)
-    * Content-type: thanks to the HTTP header, in specific to the Content-Type field, HTTP can transmit other documents types than a plain HTML file
-    * New methods: besides GET, HTTP 1.0 provides two new methods (POST and HEAD)
-    In summary, HTTP 1.0 got much more robust than the 0.9 version. The most responsible for the protocol improvements are the HTTP header and the new HTTP methods.
+         * HTTP Version 1.0
+           * Header: only the method and the resource name composed an HTTP 0.9 request. HTTP 1.0, in turn, 
+           introduced the HTTP header, thus allowing the transmission of metadata that made the protocol flexible and extensible
+           * Versioning: the HTTP requests explicitly informs the employed version, appending it in the request line
+           * Status code: HTTP responses now contain a status code, thus enabling the receiver to check the request processing status 
+           (successful or failed)
+           * Content-type: thanks to the HTTP header, in specific to the Content-Type field, HTTP can transmit other documents 
+           types than a plain HTML file
+           * New methods: besides GET, HTTP 1.0 provides two new methods (POST and HEAD)
+           In summary, HTTP 1.0 got much more robust than the 0.9 version. The most responsible for the protocol improvements are the HTTP header and
+            the new HTTP methods.
 
-  * HTTP Version 1.1
-    * Host header: HTTP 1.0 does not officially require the host header. HTTP 1.1 requires it by the specification. The host header is specially important to route messages through proxy servers, allowing to distinguish domains that point to the same IP
-    * Persistent connections: in HTTP 1.0, each request/response pair requires opening a new connection. In HTTP 1.1, it is possible to execute several requests using a single connection
-    * Continue status: to avoid servers refusing unprocessable requests,  now clients can first send only the request headers and check if they receive a continue status code (100) 
-    * New methods: besides the already available methods of HTTP 1.0, the 1.1 version added six extra methods: PUT, PATCH, DELETE, CONNECT, TRACE, and OPTIONS
-    * In addition to the highlighted enhancements, there are many others introduced in version 1.1 of HTTP, such as compression and decompression, multi-language support, and byte-range transfers.
-    Specifically, the new methods represented a real improvement in using HTTP.
+         * HTTP Version 1.1
+           * Host header: HTTP 1.0 does not officially require the host header. HTTP 1.1 requires it by the specification. 
+           The host header is specially important to route messages through proxy servers, allowing to distinguish domains that point to the same IP
+           * Persistent connections: in HTTP 1.0, each request/response pair requires opening a new connection. 
+           In HTTP 1.1, it is possible to execute several requests using a single connection
+           * Continue status: to avoid servers refusing unprocessable requests,  now clients can first send only the request 
+           headers and check if they receive a continue status code (100) 
+           * New methods: besides the already available methods of HTTP 1.0, the 1.1 version added six extra methods: 
+           PUT, PATCH, DELETE, CONNECT, TRACE, and OPTIONS
+           * In addition to the highlighted enhancements, there are many others introduced in version 1.1 of HTTP, such as compression 
+           and decompression, multi-language support, and byte-range transfers.
+           Specifically, the new methods represented a real improvement in using HTTP.
 
 
-  * HTTP Version 2.0
-    * Request multiplexing: HTTP 1.1 is a sequential protocol. So, we can send a single request at a time. HTTP 2.0, in turn, allows to send requests and receive responses asynchronously. In this way, we can do multiple requests at the same time using a single connection
-    * Request prioritization: with HTTP 2.0, we can set a numeric prioritization in a batch of requests. Thus, we can be explicit in which order we expect the responses, such as getting a webpage CSS before its JS files
-    * Automatic compressing: in the previous version of HTTP (1.1), we must explicitly require the compression of requests and responses. HTTP 2.0, however, executes a GZip compression automatically
-    * Connection reset: a functionality that allows closing a connection between a server and a client for some reason, thus immediately opening a new one
-    * Server push: to avoid a server receiving lots of requests, HTTP 2.0 introduced a server push functionality. With that, the server tries to predict the resources that will be requested soon. So, the server proactively pushes these resources to the client cache
-    * Furthermore, HTTP 2.0 became a binary protocol, replacing the previous HTTP plain text versions. In summary, we can see HTTP 2.0 as a patch of enhancements to solve the problems and limitations of the last HTTP versions.
+         * HTTP Version 2.0
+           * Request multiplexing: HTTP 1.1 is a sequential protocol. So, we can send a single request at a time. HTTP 2.0, in turn,
+            allows to send requests and receive responses asynchronously. In this way, we can do multiple requests 
+            at the same time using a single connection
+           * Request prioritization: with HTTP 2.0, we can set a numeric prioritization in a batch of requests. 
+           Thus, we can be explicit in which order we expect the responses, such as getting a webpage CSS before its JS files
+           * Automatic compressing: in the previous version of HTTP (1.1), we must explicitly require the compression of requests and responses. 
+           HTTP 2.0, however, executes a GZip compression automatically
+           * Connection reset: a functionality that allows closing a connection between a server and a client for some reason, 
+           thus immediately opening a new one
+           * Server push: to avoid a server receiving lots of requests, HTTP 2.0 introduced a server push functionality. 
+           With that, the server tries to predict the resources that will be requested soon. 
+           So, the server proactively pushes these resources to the client cache
+           * Furthermore, HTTP 2.0 became a binary protocol, replacing the previous HTTP plain text versions. 
+           In summary, we can see HTTP 2.0 as a patch of enhancements to solve the problems and limitations of the last HTTP versions.
 
 
-  * HTTP Version 3.0
-    * The main difference between HTTP 2.0 and HTTP 3.0 is the employed transport layer protocol. In HTTP 2.0, we have TCP connections with or not TLS (HTTPS and HTTP). HTTP 3.0, in turn, is designed over QUIC (Quick UDP Internet Connections).
-    * QUIC, in short, is a transport layer protocol with native multiplexing and built-in encryption. QUIC provides a quick handshake process, besides being able to mitigate latency problems in lossy and slow connections.
-    * In addition to the potential benefits inherited from QUIC, another relevant characteristic of HTTP 3.0 is that it always creates encrypted connections. So, it is similar to always employing HTTPS in current HTTP 2.0.
-
+         * HTTP Version 3.0
+           * The main difference between HTTP 2.0 and HTTP 3.0 is the employed transport layer protocol. 
+           In HTTP 2.0, we have TCP connections with or not TLS (HTTPS and HTTP). HTTP 3.0, in turn, is designed over QUIC 
+           (Quick UDP Internet Connections).
+           * QUIC, in short, is a transport layer protocol with native multiplexing and built-in encryption. 
+           QUIC provides a quick handshake process, besides being able to mitigate latency problems in lossy and slow connections.
+           * In addition to the potential benefits inherited from QUIC, another relevant characteristic of HTTP 3.0 is that it always 
+           creates encrypted connections. So, it is similar to always employing HTTPS in current HTTP 2.0.
 
   </details>
   
@@ -541,20 +598,28 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Введение адреса в строку поиска веб-браузера и нажатие "Enter" инициирует сложный процесс, в котором участвуют различные компоненты, включая ваш компьютер, сетевые протоколы и удаленный веб-сервер. Вот как это обычно происходит:
-    - Анализ URL: Браузер анализирует введенный URL, чтобы определить, является ли это поисковым запросом или конкретным веб-адресом.
-    - Кэширование и Локальные Ресурсы: Браузер проверяет локальный кэш и другие ресурсы (например, файлы hosts), чтобы увидеть, сохранена ли уже нужная страница или известен ли IP-адрес для данного доменного имени.
-    - DNS-запрос: Если информация не найдена локально, браузер отправляет DNS-запрос на серверы доменных имен для разрешения доменного имени на IP-адрес.
-    - Установление Соединения: После получения IP-адреса браузер устанавливает соединение с веб-сервером, используя протокол HTTP или HTTPS.
-    - HTTP-Запрос: Браузер отправляет HTTP-запрос на веб-сервер. Запрос обычно включает в себя метод (обычно "GET" для извлечения данных), заголовки и, возможно, тело запроса.
-    - Обработка Запроса: Веб-сервер обрабатывает запрос, что может включать в себя различные задачи, такие как выполнение кода на стороне сервера, запросы к базам данных и т.д.
-    - HTTP-Ответ: Веб-сервер отправляет ответ обратно в браузер. Ответ включает в себя HTTP-статус (например, 200 для успешного запроса, 404 для "Не найдено"), заголовки ответа и тело ответа, которое обычно содержит запрашиваемую веб-страницу.
-    - Рендеринг Страницы: Браузер анализирует HTML, CSS и JavaScript, содержащиеся в теле ответа, и отображает страницу на экране.
-    - Загрузка Ресурсов: Веб-страницы часто содержат дополнительные ресурсы, такие как изображения, стили и скрипты, которые также нужно загрузить. Браузер делает дополнительные HTTP-запросы для этих ресурсов.
-    - Завершение: Страница полностью загружена и отображена в браузере, и пользователь может взаимодействовать с ней.
-  
-  * Это очень упрощенное описание процесса, и на каждом этапе может происходить много дополнительных действий, включая обработку кук, кэширование, редиректы и другие.
-  
+        * Введение адреса в строку поиска веб-браузера и нажатие "Enter" инициирует сложный процесс, в котором участвуют различные компоненты, 
+        включая ваш компьютер, сетевые протоколы и удаленный веб-сервер. Вот как это обычно происходит:
+          - Анализ URL: Браузер анализирует введенный URL, чтобы определить, является ли это поисковым запросом или конкретным веб-адресом.
+          - Кэширование и Локальные Ресурсы: Браузер проверяет локальный кэш и другие ресурсы (например, файлы hosts), чтобы увидеть, 
+          сохранена ли уже нужная страница или известен ли IP-адрес для данного доменного имени.
+          - DNS-запрос: Если информация не найдена локально, браузер отправляет DNS-запрос на серверы доменных имен для разрешения доменного 
+            имени на IP-адрес.
+          - Установление Соединения: После получения IP-адреса браузер устанавливает соединение с веб-сервером, используя протокол HTTP или HTTPS.
+          - HTTP-Запрос: Браузер отправляет HTTP-запрос на веб-сервер. Запрос обычно включает в себя метод (обычно "GET" для извлечения данных), 
+            заголовки и, возможно, тело запроса.
+          - Обработка Запроса: Веб-сервер обрабатывает запрос, что может включать в себя различные задачи, такие как выполнение кода на стороне 
+            сервера, запросы к базам данных и т.д.
+          - HTTP-Ответ: Веб-сервер отправляет ответ обратно в браузер. Ответ включает в себя HTTP-статус (например, 200 для успешного запроса, 
+          404 для "Не найдено"), заголовки ответа и тело ответа, которое обычно содержит запрашиваемую веб-страницу.
+          - Рендеринг Страницы: Браузер анализирует HTML, CSS и JavaScript, содержащиеся в теле ответа, и отображает страницу на экране.
+          - Загрузка Ресурсов: Веб-страницы часто содержат дополнительные ресурсы, такие как изображения, стили и скрипты, 
+            которые также нужно загрузить. Браузер делает дополнительные HTTP-запросы для этих ресурсов.
+          - Завершение: Страница полностью загружена и отображена в браузере, и пользователь может взаимодействовать с ней.
+        
+        * Это очень упрощенное описание процесса, и на каждом этапе может происходить много дополнительных действий, 
+            включая обработку кук, кэширование, редиректы и другие.
+        
   </details>
   
   ---
@@ -564,28 +629,28 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Структура пакета HTTP:
-    - Метод запроса/статус ответа
-    - Заголовки (не обязательно)
-    - Тело сообщения (не обязательно)
-    
-  * Методы HTTP:
-    GET – запрос Web-страницы
-    POST – передача данных на Web-сервер
-    HEAD – запрос заголовка страницы
-    PUT – помещение страницы на Web-сервер
-    DELETE – удаление страницы с Web-сервера
-    TRACE – трассировка страницы
-    OPTIONS – запрос поддерживаемых методов HTTP для ресурса
-    CONNECT – подключение к Web-серверу через прокси
-    
-   * Статусы HTTP:
-    1XX – информация
-    2XX – успешное выполнение (200 ОК)
-    3ХХ – перенаправление (301 – постоянное перемещение, 307 – временное перенаправление)
-    4ХХ – Ошибка на стороне клиента (403 – доступ запрещен, 404 – страница не найдена)
-    5ХХ – Ошибка сервера (500 – внутренняя ошибка сервера)
-  
+        * Структура пакета HTTP:
+          - Метод запроса/статус ответа
+          - Заголовки (не обязательно)
+          - Тело сообщения (не обязательно)
+          
+        * Методы HTTP:
+          GET – запрос Web-страницы
+          POST – передача данных на Web-сервер
+          HEAD – запрос заголовка страницы
+          PUT – помещение страницы на Web-сервер
+          DELETE – удаление страницы с Web-сервера
+          TRACE – трассировка страницы
+          OPTIONS – запрос поддерживаемых методов HTTP для ресурса
+          CONNECT – подключение к Web-серверу через прокси
+          
+         * Статусы HTTP:
+          1XX – информация
+          2XX – успешное выполнение (200 ОК)
+          3ХХ – перенаправление (301 – постоянное перемещение, 307 – временное перенаправление)
+          4ХХ – Ошибка на стороне клиента (403 – доступ запрещен, 404 – страница не найдена)
+          5ХХ – Ошибка сервера (500 – внутренняя ошибка сервера)
+        
   </details>
   
   ---  
@@ -595,28 +660,28 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Сокеты - это интерфейс для взаимодействия с транспортным уровнем. Программист взаимодействует с транспортным уровнем через интерфейс сокетов, поэтому протоколы TCP и UDP скрыты от программиста. Следовательно, при изменении протоколов транспортного уровня программу менять не придется. 
-  * Принципы сокетов
-    Для взаимодействия между машинами с помощью стека протоколов TCP/IP используются адреса и порты. Эта пара определяет сокет («гнездо», соответствующее адресу и порту).
-    В процессе обмена, как правило, используется два сокета - сокет отправителя и сокет получателя. Например, при обращении к серверу на HTTP-порт сокет будет выглядеть так: 194.106.118.30:80, а ответ будет поступать на mmm.nnn.ppp.qqq:xxxxx.
-    Каждый процесс может создать «слушающий» сокет (серверный сокет) и привязать его к какому-нибудь порту операционной системы.
-    Слушающий процесс обычно находится в цикле ожидания, то есть просыпается при появлении нового соединения. При этом сохраняется возможность проверить наличие соединений на данный момент, установить тайм-аут для операции и т. д.
-    Каждый сокет имеет свой адрес. ОС семейства UNIX могут поддерживать много типов адресов, но обязательными являются INET-адрес и UNIX-адрес. 
-    Если привязать сокет к UNIX-адресу, то будет создан специальный файл (файл сокета) по заданному пути, через который смогут сообщаться любые локальные процессы путём чтения/записи из него. 
-    Сокеты типа INET доступны из сети и требуют выделения номера порта.
-    Обычно клиент явно «подсоединяется» к слушателю, после чего любое чтение или запись через его файловый дескриптор будут передавать данные между ним и сервером.
-  
-  * WebSocket - протокол связи поверх TCP-соединения, предназначенный для обмена сообщениями между браузером и веб-сервером в режиме реального времени.
-    Основное отличие Web сокетов от HTTP заключается в том, что в Web сокетах создается двунаправленное соединение между клиентом и сервером. По этому соединению клиент и сервер могут отправлять данные друг другу в любое время.
+         * Сокеты - это интерфейс для взаимодействия с транспортным уровнем. Программист взаимодействует с транспортным уровнем через интерфейс сокетов, поэтому протоколы TCP и UDP скрыты от программиста. Следовательно, при изменении протоколов транспортного уровня программу менять не придется. 
+         * Принципы сокетов
+           Для взаимодействия между машинами с помощью стека протоколов TCP/IP используются адреса и порты. Эта пара определяет сокет («гнездо», соответствующее адресу и порту).
+           В процессе обмена, как правило, используется два сокета - сокет отправителя и сокет получателя. Например, при обращении к серверу на HTTP-порт сокет будет выглядеть так: 194.106.118.30:80, а ответ будет поступать на mmm.nnn.ppp.qqq:xxxxx.
+           Каждый процесс может создать «слушающий» сокет (серверный сокет) и привязать его к какому-нибудь порту операционной системы.
+           Слушающий процесс обычно находится в цикле ожидания, то есть просыпается при появлении нового соединения. При этом сохраняется возможность проверить наличие соединений на данный момент, установить тайм-аут для операции и т. д.
+           Каждый сокет имеет свой адрес. ОС семейства UNIX могут поддерживать много типов адресов, но обязательными являются INET-адрес и UNIX-адрес. 
+           Если привязать сокет к UNIX-адресу, то будет создан специальный файл (файл сокета) по заданному пути, через который смогут сообщаться любые локальные процессы путём чтения/записи из него. 
+           Сокеты типа INET доступны из сети и требуют выделения номера порта.
+           Обычно клиент явно «подсоединяется» к слушателю, после чего любое чтение или запись через его файловый дескриптор будут передавать данные между ним и сервером.
+         
+         * WebSocket - протокол связи поверх TCP-соединения, предназначенный для обмена сообщениями между браузером и веб-сервером в режиме реального времени.
+           Основное отличие Web сокетов от HTTP заключается в том, что в Web сокетах создается двунаправленное соединение между клиентом и сервером. По этому соединению клиент и сервер могут отправлять данные друг другу в любое время.
 
-    - Двунаправленная асинхронная передача данных для Web
-    - Этапы передачи данных
-        • Установка соединения. В целях поддержки существующей инфраструктуры Web используется подход HTTP со сменой (urgrade) протокола на Web сокеты.
-        • Передача данных. Для передачи данных используется постоянное TCP соединение между клиентом и сервером. Данные передаеются в виде кадров (frames), имеющих бинарные заголовки.
-    - Преимущества
-        • Поддержка существующей инфраструктуры Web ( прокси серверы, балансировщики нагрузки, межсетевые экраны и т.п.)
-        • Высокая производительность из за низких накладных расходов
-  
+           - Двунаправленная асинхронная передача данных для Web
+           - Этапы передачи данных
+               • Установка соединения. В целях поддержки существующей инфраструктуры Web используется подход HTTP со сменой (urgrade) протокола на Web сокеты.
+               • Передача данных. Для передачи данных используется постоянное TCP соединение между клиентом и сервером. Данные передаеются в виде кадров (frames), имеющих бинарные заголовки.
+           - Преимущества
+               • Поддержка существующей инфраструктуры Web ( прокси серверы, балансировщики нагрузки, межсетевые экраны и т.п.)
+               • Высокая производительность из за низких накладных расходов
+         
   </details>
   
   ---
@@ -626,9 +691,9 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * MAC-адрес — это уникальный идентификационный номер или код, используемый для идентификации отдельных устройств в сети.
-    Пакеты, отправляемые по Ethernet, всегда поступают с MAC-адреса и отправляются на MAC-адрес. Если сетевой адаптер получает пакет, 
-    он сравнивает MAC-адрес назначения пакета с собственным MAC-адресом адаптера.
+      * MAC-адрес — это уникальный идентификационный номер или код, используемый для идентификации отдельных устройств в сети.
+        Пакеты, отправляемые по Ethernet, всегда поступают с MAC-адреса и отправляются на MAC-адрес. Если сетевой адаптер получает пакет, 
+        он сравнивает MAC-адрес назначения пакета с собственным MAC-адресом адаптера.
   
   </details>
   
@@ -639,9 +704,9 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Адрес Интернет-протокола (IP-адрес) — это числовая метка, присвоенная каждому устройству, подключенному к 
-    компьютерной сети, которая использует Интернет-протокол для связи. IP-адрес выполняет две основные функции: 
-    идентификацию хоста или сетевого интерфейса и адресацию местоположения.
+        * Адрес Интернет-протокола (IP-адрес) — это числовая метка, присвоенная каждому устройству, подключенному к 
+          компьютерной сети, которая использует Интернет-протокол для связи. IP-адрес выполняет две основные функции: 
+          идентификацию хоста или сетевого интерфейса и адресацию местоположения.
   
   </details>
   
@@ -652,16 +717,16 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Это числовой параметр, используемый в сетях для определения диапазона IP-адресов, которые принадлежат одной и той же подсети. 
-    Маска подсети определяет, какая часть IP-адреса относится к сети, а какая - к устройствам в этой сети.
-    Маска подсети представляет собой последовательность битов (обычно в виде четырех чисел, разделенных точками, например, 255.255.255.0),
-    где каждый бит может быть установлен в 1 или 0. Биты, установленные в 1, обозначают часть IP-адреса, относящуюся к сети, а биты, установленные 
-    в 0, обозначают часть адреса, которая отведена для устройств в этой подсети.
-    Например, если IP-адрес имеет вид 192.168.1.100, а маска подсети 255.255.255.0, то первые 24 бита этого IP-адреса 
-    (так как установлено 24 бита в маске подсети) используются для обозначения сети, а оставшиеся 8 бит отводятся для устройств в этой подсети. 
-    Это позволяет разделять сеть на подсети и управлять IP-адресами и маршрутизацией внутри сети.
-    Маска подсети важна для правильной настройки сетевых устройств, чтобы они могли определить, какие адреса находятся в той же подсети, 
-    и какие должны быть переданы через маршрутизатор для доставки к удаленным сетям.
+     * Это числовой параметр, используемый в сетях для определения диапазона IP-адресов, которые принадлежат одной и той же подсети. 
+       Маска подсети определяет, какая часть IP-адреса относится к сети, а какая - к устройствам в этой сети.
+       Маска подсети представляет собой последовательность битов (обычно в виде четырех чисел, разделенных точками, например, 255.255.255.0),
+       где каждый бит может быть установлен в 1 или 0. Биты, установленные в 1, обозначают часть IP-адреса, относящуюся к сети, а биты, установленные 
+       в 0, обозначают часть адреса, которая отведена для устройств в этой подсети.
+       Например, если IP-адрес имеет вид 192.168.1.100, а маска подсети 255.255.255.0, то первые 24 бита этого IP-адреса 
+       (так как установлено 24 бита в маске подсети) используются для обозначения сети, а оставшиеся 8 бит отводятся для устройств в этой подсети. 
+       Это позволяет разделять сеть на подсети и управлять IP-адресами и маршрутизацией внутри сети.
+       Маска подсети важна для правильной настройки сетевых устройств, чтобы они могли определить, какие адреса находятся в той же подсети, 
+       и какие должны быть переданы через маршрутизатор для доставки к удаленным сетям.
   
   </details>
   
@@ -672,23 +737,23 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Частный IP-адрес (Private IP Address) - это IP-адрес, который назначается устройству или хосту внутри частной сети, обычно внутри 
-    организации, и не доступен напрямую из Интернета. Частные IP-адреса предназначены для использования в локальных сетях, и их 
-    использование помогает разделить адресное пространство Интернета между различными организациями, предотвращая конфликты IP-адресов и 
-    обеспечивая безопасность и конфиденциальность локальной сети.
-  
-    Существует несколько стандартных диапазонов частных IP-адресов, определенных RFC 1918:  
-    10.0.0.0 - 10.255.255.255 (10.0.0.0/8): Этот диапазон содержит 16 777 216 адресов и широко используется в больших организациях.  
-    172.16.0.0 - 172.31.255.255 (172.16.0.0/12): Этот диапазон содержит 1 048 576 адресов и часто используется в средних по размеру сетях.  
-    192.168.0.0 - 192.168.255.255 (192.168.0.0/16): Этот диапазон содержит 65 536 адресов и является одним из самых распространенных для домашних 
-    сетей и малых офисов.  
-  * Частные IP-адреса часто используются в следующих сценариях и проектах:
-    - Внутренние корпоративные сети: В офисных сетях и сетях предприятий используются частные IP-адреса для всех устройств внутри организации. Это позволяет легко управлять и масштабировать сеть.
-    - Домашние сети: Для домашних сетей, подключенных к Интернету через маршрутизатор, частные IP-адреса используются для устройств в домашней сети, обеспечивая их безопасность и изоляцию от Интернета.
-    - Виртуальные частные сети (VPN): В VPN-сетях используются частные IP-адреса для обеспечения безопасного и зашифрованного соединения между удаленными устройствами и корпоративной сетью.
-    - Тестирование и разработка: В среде разработки и тестирования частные IP-адреса могут использоваться для изоляции тестовых сред от боевых сетей.
-    - Локальные игровые сети: В локальных сетях для игр на консолях и ПК часто используются частные IP-адреса для подключения устройств друг к другу в играх.
-    - Частные IP-адреса не могут использоваться напрямую в Интернете, поэтому для устройств, которым требуется общедоступная сетевая связь, используются механизмы Network Address Translation (NAT) или прокси-серверы для перевода частных адресов в публичные.
+      * Частный IP-адрес (Private IP Address) - это IP-адрес, который назначается устройству или хосту внутри частной сети, обычно внутри 
+        организации, и не доступен напрямую из Интернета. Частные IP-адреса предназначены для использования в локальных сетях, и их 
+        использование помогает разделить адресное пространство Интернета между различными организациями, предотвращая конфликты IP-адресов и 
+        обеспечивая безопасность и конфиденциальность локальной сети.
+      
+        Существует несколько стандартных диапазонов частных IP-адресов, определенных RFC 1918:  
+        10.0.0.0 - 10.255.255.255 (10.0.0.0/8): Этот диапазон содержит 16 777 216 адресов и широко используется в больших организациях.  
+        172.16.0.0 - 172.31.255.255 (172.16.0.0/12): Этот диапазон содержит 1 048 576 адресов и часто используется в средних по размеру сетях.  
+        192.168.0.0 - 192.168.255.255 (192.168.0.0/16): Этот диапазон содержит 65 536 адресов и является одним из самых распространенных для домашних 
+        сетей и малых офисов.  
+      * Частные IP-адреса часто используются в следующих сценариях и проектах:
+        - Внутренние корпоративные сети: В офисных сетях и сетях предприятий используются частные IP-адреса для всех устройств внутри организации. Это позволяет легко управлять и масштабировать сеть.
+        - Домашние сети: Для домашних сетей, подключенных к Интернету через маршрутизатор, частные IP-адреса используются для устройств в домашней сети, обеспечивая их безопасность и изоляцию от Интернета.
+        - Виртуальные частные сети (VPN): В VPN-сетях используются частные IP-адреса для обеспечения безопасного и зашифрованного соединения между удаленными устройствами и корпоративной сетью.
+        - Тестирование и разработка: В среде разработки и тестирования частные IP-адреса могут использоваться для изоляции тестовых сред от боевых сетей.
+        - Локальные игровые сети: В локальных сетях для игр на консолях и ПК часто используются частные IP-адреса для подключения устройств друг к другу в играх.
+        - Частные IP-адреса не могут использоваться напрямую в Интернете, поэтому для устройств, которым требуется общедоступная сетевая связь, используются механизмы Network Address Translation (NAT) или прокси-серверы для перевода частных адресов в публичные.
   
   </details>
   
@@ -699,7 +764,7 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * DHCP (Dynamic Host Configuration Protocol) используется для автоматического назначения IP-адресов и других сетевых параметров устройствам в сети.
+       * DHCP (Dynamic Host Configuration Protocol) используется для автоматического назначения IP-адресов и других сетевых параметров устройствам в сети.
   
   </details>
   
@@ -731,6 +796,10 @@ P.S.S.
   ---
 
 </details>
+
+
+
+
 
 <!-- Операционная система -->
 <details>
@@ -820,6 +889,17 @@ P.S.S.
     <summary>Ответ</summary>
   
   * IPC (межпроцессное взаимодействие) — это набор методов и средств, позволяющих различным процессам обмениваться данными и сигналами.
+    Из механизмов, предоставляемых ОС и используемых для IPC, можно выделить:
+    - механизмы обмена сообщениями;
+    - механизмы синхронизации;
+    - механизмы разделения памяти;
+    - механизмы удалённых вызовов (RPC).
+    
+  * Для оценки производительности различных механизмов IPC используют следующие параметры:
+    - пропускная способность (количество сообщений в единицу времени, которое ядро ОС или процесс способно обработать);
+    - задержки (время между отправкой сообщения одним потоком и его получением другим потоком).
+    
+   примеры методов: Файл, Сигнал, Сокет, Канал, Семафор, Обмен сообщениями, Проецируемый в память файл (mmap), Очередь сообщений (Message queue) и др.
   
   </details>
   
@@ -862,6 +942,111 @@ P.S.S.
   ---
 
 </details>
+
+
+
+
+
+<!-- Очереди сообщений -->
+<details>
+    <summary><b><i>Kafka</i></b></summary>
+
+  ---
+  
+- Вопрос №1: [ Гарантии доставки ]
+  
+  <details>
+    <summary>Ответ</summary>
+        * At most once: Messages are delivered once, and if there is a system failure, messages may be lost and are not redelivered.
+        * At least once: This means messages are delivered one or more times. If there is a system failure, messages are never lost, 
+            but they may be delivered more than once.
+        * Exactly once: This is the preferred behavior in that each message is delivered once and only once. 
+            Messages are never lost or read twice even if some part of the system fails.
+    
+  </details>
+  
+  ---
+  
+- Вопрос №2: [ что будет если партиций больше, чем консьюмеров(в группе)? а если наоборот - консьюмеров больше, чем партиций? ]
+  
+  <details>
+    <summary>Ответ</summary>
+        * If there're more paritions than consumers in a group, some consumers will consume data from more than one partition. 
+        * If there're more consumers in a group than paritions, some consumers will get no data. 
+        * If you add new consumer instances to the group, they will take over some partitons from old members. 
+        * If you remove a consumer from the group (or the consumer dies), its partition will be reassigned to other member.
+        * You CANNOT have multiple consumers (in a consumer group) to consume data from a single parition. 
+            However, if there're more than one consumer group, the same partition can be consumed by one (and only one) consumer 
+            in each consumer group.
+        
+  </details>
+  
+  ---
+  
+- Вопрос №3: [ как выбрать количество партиций, проблемы ]
+  
+  <details>
+    <summary>Ответ</summary>
+        * Partitions allow users to parallelize topics, meaning data for any topic can be divided over multiple brokers. 
+            In other words, the greater the parallelization the greater the throughput. 
+            On the other hand a partition will always be consumed completely by a single consumer.
+            Therefore, in general, the more partitions there are in a Kafka cluster, the higher the throughput one can achieve.
+        * increasing partition count simultaneously increases the number of open server files and leads to increased replication latency.
+        * Partitions = Desired Throughput / Partition Speed (in general single partition for a single Kafka topic runs at 10 MB/s)
+        * 
+        
+  </details>
+  
+  ---
+  
+- Вопрос №4: [ replication factor ]
+  
+  <details>
+    <summary>Ответ</summary>
+        * The replication factor is set to 3 as a default. While partitions reflect horizontal scaling of unique information, 
+        replication factors refer to backups. For a replication factor of 3 in the example above, 
+        there are 18 partitions in total with 6 partitions being the originals and then 2 copies of each of those unique partitions.
+        
+  </details>
+  
+  ---
+  
+- Вопрос №5: [ изменения количества партиций в рантайме ]
+  
+  <details>
+    <summary>Ответ</summary>
+        * 1.Is it possible to change the number of partitions without tearing down the cluster?
+          Yes kafka supports increasing the number of partitions at runtime but doesn't support decreasing number of partitions due to its design
+        * 2.And is it possible to do that without bringing down the topic?
+          Yes provided you are increasing partitions.
+        * 3.Will adding/removing partitions automatically take care of redistributing messages across the new partitions?
+          As mentioned earlier removing partitions is not supported .
+          When you increase the number of partitions, the existing messages will remain in the same partitions as before 
+          only the new messages will be considered for new partitions (also depending on you partitioner logic). 
+          Increasing the partitions for a topic will trigger a cluster rebalance , where in the consumers and producers will get notified 
+          with the updated metadata of the topics. Producers will start sending messages to new partitions after receiving updated metadata 
+          and consumer rebalancer will redistribute the partitions among the consumers groups and resume consumption from the last committed offset.
+          All this will happen under the hood , so you wont have to do any changes at client side
+        
+  </details>
+  
+  ---
+   
+- Вопрос №: [  ]
+  
+  <details>
+    <summary>Ответ</summary>
+        * 
+        
+  </details>
+  
+  ---
+                
+</details>
+
+
+
+
 
 <!-- Базы данных -->
 <details>
@@ -919,7 +1104,10 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  * Индексы в базах данных — это структуры, которые ускоряют операции выборки данных.
+  * Индексы в базах данных — это структуры, которые ускоряют операции выборки данных. 
+    Индекс формируется из значений одного или нескольких столбцов таблицы и указателей на строки этой таблицы.
+    Или мы можем создать индекс не по полю таблицы, а по функции или скалярному выражению с одной или несколькими колонками таблицы 
+    (такие индексы называют функциональными или индексами по выражению). Это позволяет быстро находить данные в таблице по результатам вычислений.
   * Они нужны для ускорения доступа к данным в таблице и эффективной работы операций выборки, сортировки и объединения.
   
   </details>
@@ -965,67 +1153,68 @@ P.S.S.
   <details>
     <summary>Ответ</summary>
   
-  Уровень изолированности транзакций — условное значение, определяющее, в какой мере в результате выполнения логически параллельных транзакций в СУБД допускается получение несогласованных данных. Более высокий уровень изолированности соответствует лучшей согласованности данных, но его использование может снижать количество физически параллельно выполняемых транзакций.
-
-  При параллельном выполнении транзакций возможны следующие аномалии (проблемы):
-  - потерянное обновление (англ. lost update) — при одновременном изменении одного блока данных разными транзакциями теряются все изменения, кроме последнего;
-  - «грязное» чтение (англ. dirty read) — чтение данных, добавленных или изменённых транзакцией, которая впоследствии не подтвердится (откатится);
-  - неповторяющееся чтение (англ. non-repeatable read) — при повторном чтении в рамках одной транзакции ранее прочитанные данные оказываются изменёнными;
-  - фантомное чтение (англ. phantom reads) — одна транзакция в ходе своего выполнения несколько раз выбирает множество строк по одним и тем же критериям. Другая транзакция в интервалах между этими выборками добавляет строки или изменяет столбцы некоторых строк, используемых в критериях выборки первой транзакции, и успешно заканчивается. В результате получится, что одни и те же выборки в первой транзакции дают разные множества строк.
-
-  Под «уровнем изоляции транзакций» понимается степень обеспечиваемой внутренними механизмами СУБД (то есть не требующей специального программирования) защиты от всех или некоторых вышеперечисленных видов несогласованности данных, возникающих при параллельном выполнении транзакций.
-
-  * Уровень изоляции READ UNCOMMITTED\
-    Уровень изоляции READ UNCOMMITTED предоставляет самую простую форму изоляции между транзакциями, поскольку он вообще не изолирует операции чтения других транзакций. Когда транзакция выбирает строку при этом уровне изоляции, она не задает никаких блокировок и не признает никаких существующих блокировок. Считываемые такой транзакцией данные могут быть несогласованными. В таком случае транзакция читает данные, которые были обновлены какой-либо другой активной транзакцией. А если для этой другой транзакции позже выполняется откат, то значит, что первая транзакция прочитала данные, которые никогда по-настоящему не существовали.\
-    Из четырех проблем одновременного конкурентного доступа к данным, описанных в предшествующем разделе, уровень изоляции READ UNCOMMITTED допускает три: грязное чтение, неповторяемое чтение и фантомы.\
-    Типичный способ реализации данного уровня изоляции — блокировка данных на время выполнения команды изменения.
-    Применение уровня изоляции READ UNCOMMITTED обычно крайне нежелательно и его следует применять только в тех случаях, когда точность данных не представляет важности или когда данные редко подвергаются изменениям.
-  
-  * Уровень изоляции READ COMMITTED\
-    Как уже упоминалось, уровень READ COMMITTED имеет две формы. Первая форма применяется в пессимистической модели одновременного конкурентного доступа, а вторая - в оптимистической. В этом разделе рассматривается первая форма этого уровня изоляции.\
-    Транзакция, которая читает строку и использует уровень изоляции READ COMMITTED, выполнят проверку только на наличие монопольной блокировки для данной строки. Если такая блокировка отсутствует, транзакция извлекает строку. (Это выполняется с использованием разделяемой блокировки.) Таким образом предотвращается чтение транзакцией данных, которые не были подтверждены и которые могут быть позже отменены. После того, как данные были прочитаны, их можно изменять другими транзакциями.\
-    Применяемые этим уровнем изоляции разделяемые блокировки отменяются сразу же после обработки данных. (Обычно все блокировки отменяются в конце транзакции.) Это улучшает параллельный одновременный конкурентный доступ к данным, но возможность неповторяемого чтения и фантомов продолжает существовать.\
-  
-  * Уровень изоляции REPEATABLE READ\
-    В отличие от уровня изоляции READ COMMITTED, уровень REPEATABLE READ устанавливает разделяемые блокировки на все считываемые данные и удерживает эти блокировки до тех пор, пока транзакция не будет подтверждена или отменена. Поэтому в этом случае многократное выполнение запроса внутри транзакции всегда будет возвращать один и тот же результат. Недостатком этого уровня изоляции является дальнейшее ухудшение одновременного конкурентного доступа, поскольку период времени, в течение которого другие транзакции не могут обновлять те же самые данные, значительно дольше, чем в случае уровня READ COMMITTED.\
-    Этот уровень изоляции не препятствует другим инструкциям вставлять новые строки, которые включаются в последующие операции чтения, вследствие чего могут появляться фантомы.
-  
-  * Уровень изоляции SERIALIZABLE\
-    Уровень изоляции SERIALIZABLE является самым строгим, потому что он не допускает возникновения всех четырех проблем параллельного одновременного конкурентного доступа, перечисленных ранее. Этот уровень устанавливает блокировку на всю область данных, считываемых соответствующей транзакцией. Поэтому этот уровень изоляции также предотвращает вставку новых строк другой транзакцией до тех пор, пока первая транзакция не будет подтверждена или отменена.\
-    Уровень изоляции SERIALIZABLE реализуется, используя метод блокировки диапазона ключа. Суть этого метода заключается в блокировке отдельных строк включительно со всем диапазоном строк между ними. Блокировка диапазона ключа блокирует элементы индексов, а не определенные страницы или всю таблицу. В этом случае любые операции модификации другой транзакцией невозможны, вследствие невозможности выполнения требуемых изменений элементов индекса.\
-    В заключение обсуждения четырех уровней изоляции следует упомянуть, что требуется знать, что чем выше уровень изоляции, тем меньше степень одновременного конкурентного доступа. Таким образом, уровень изоляции READ UNCOMMITTED меньше всего уменьшает одновременный конкурентный доступ. С другой стороны, он также предоставляет наименьшую изоляцию параллельных конкурентных транзакций. Уровень изоляции SERIALIZABLE наиболее сильно уменьшает степень одновременного конкурентного доступа, но гарантирует полную изоляцию параллельных конкурентных транзакций.
+      Уровень изолированности транзакций — условное значение, определяющее, в какой мере в результате выполнения логически параллельных транзакций в СУБД допускается получение несогласованных данных. Более высокий уровень изолированности соответствует лучшей согласованности данных, но его использование может снижать количество физически параллельно выполняемых транзакций.
     
-      Lost update предотвращается на всех уровнях изоляции (= Not Possible)
-    +------------------+--------------+----------------+--------------+ 
-    | Level            | Dirty read   | Non-repeatable |  Phantom     |
-    |                  |              |     read       |              |
-    +------------------+--------------+----------------+--------------+
-    | READ UNCOMMITTED | Possible*    | Possible       | Possible     |
-    +------------------+--------------+----------------+--------------+
-    | READ COMMITTED   | Not Possible | Possible       | Possible     |
-    +------------------+--------------+----------------+--------------+
-    | REPEATABLE READ  | Not Possible | Not Possible   | Possible*    |
-    +------------------+--------------+----------------+--------------+
-    | SERIALIZABLE     | Not Possible | Not Possible   | Not Possible |
-    +------------------+--------------+----------------+--------------+
-  * but not in PG
-  
-  In PostgreSQL, you can request any of the four standard transaction isolation levels, but internally only three distinct isolation levels are implemented, i.e., PostgreSQL's Read Uncommitted mode behaves like Read Committed. This is because it is the only sensible way to map the standard isolation levels to PostgreSQL's multiversion concurrency control architecture.
-  The table also shows that PostgreSQL's Repeatable Read implementation does not allow phantom reads. This is acceptable under the SQL standard because the standard specifies which anomalies must not occur at certain isolation levels; higher guarantees are acceptable. The behavior of the available isolation levels is detailed in the following subsections.
-  Some PostgreSQL data types and functions have special rules regarding transactional behavior. In particular, changes made to a sequence (and therefore the counter of a column declared using serial) are immediately visible to all other transactions and are not rolled back if the transaction that made the changes aborts.
-  PostgreSQL uses Read Committed by default, whereas MySQL has chosen Repeatable Read, which is better isolated, but when PostgreSQL transactions use the Repeatable Read level, they’re more isolated than MySQL transactions.
-  
-  * Уровни изоляции определяют, как транзакции взаимодействуют друг с другом. ACID — это аббревиатура, обозначающая свойства транзакций.
-    Или можно сказать так: аббревиатура ACID обозначает совокупность гарантий относительно поведения базы данных при объединении нескольких действий в единую логическую операцию, которую часто называют транзакцией.
-    - Atomicity (атомарность)
-        Атомарность гарантирует, что никакая транзакция не будет зафиксирована в системе частично. Будут либо выполнены все её подоперации, либо не выполнено ни одной. 
-    - Consistency (согласованность)
-        Транзакция, достигающая своего нормального завершения (англ. end of transaction, EOT) и тем самым фиксирующая свои результаты, сохраняет согласованность базы данных. Другими словами, каждая успешная транзакция по определению фиксирует только допустимые результаты.
-    - Isolation (изоляция)
-        Во время выполнения транзакции параллельные транзакции не должны оказывать влияния на её результат.
-    - Durability (устойчивость)
-        Независимо от проблем на нижних уровнях (к примеру, обесточивание системы или сбои в оборудовании) изменения, сделанные успешно завершённой транзакцией, должны остаться сохранёнными после возвращения системы в работу. Другими словами, если пользователь получил подтверждение от системы, что транзакция выполнена, он может быть уверен, что сделанные им изменения не будут отменены из-за какого-либо сбоя.
-  
+      При параллельном выполнении транзакций возможны следующие аномалии (проблемы):
+      - потерянное обновление (англ. lost update) — при одновременном изменении одного блока данных разными транзакциями теряются все изменения, кроме последнего;
+      - «грязное» чтение (англ. dirty read — чтение данных, добавленных или изменённых транзакцией, которая впоследствии не подтвердится (откатится);
+      - неповторяющееся чтение (англ. non-repeatable read) — при повторном чтении в рамках одной транзакции ранее прочитанные данные 
+        оказываются изменёнными;
+      - фантомное чтение (англ. phantom reads) — одна транзакция в ходе своего выполнения несколько раз выбирает множество строк по одним и тем же критериям. Другая транзакция в интервалах между этими выборками добавляет строки или изменяет столбцы некоторых строк, используемых в критериях выборки первой транзакции, и успешно заканчивается. В результате получится, что одни и те же выборки в первой транзакции дают разные множества строк.
+    
+      Под «уровнем изоляции транзакций» понимается степень обеспечиваемой внутренними механизмами СУБД (то есть не требующей специального программирования) защиты от всех или некоторых вышеперечисленных видов несогласованности данных, возникающих при параллельном выполнении транзакций.
+    
+      * Уровень изоляции READ UNCOMMITTED\
+        Уровень изоляции READ UNCOMMITTED предоставляет самую простую форму изоляции между транзакциями, поскольку он вообще не изолирует операции чтения других транзакций. Когда транзакция выбирает строку при этом уровне изоляции, она не задает никаких блокировок и не признает никаких существующих блокировок. Считываемые такой транзакцией данные могут быть несогласованными. В таком случае транзакция читает данные, которые были обновлены какой-либо другой активной транзакцией. А если для этой другой транзакции позже выполняется откат, то значит, что первая транзакция прочитала данные, которые никогда по-настоящему не существовали.\
+        Из четырех проблем одновременного конкурентного доступа к данным, описанных в предшествующем разделе, уровень изоляции READ UNCOMMITTED допускает три: грязное чтение, неповторяемое чтение и фантомы.\
+        Типичный способ реализации данного уровня изоляции — блокировка данных на время выполнения команды изменения.
+        Применение уровня изоляции READ UNCOMMITTED обычно крайне нежелательно и его следует применять только в тех случаях, когда точность данных не представляет важности или когда данные редко подвергаются изменениям.
+      
+      * Уровень изоляции READ COMMITTED\
+        Как уже упоминалось, уровень READ COMMITTED имеет две формы. Первая форма применяется в пессимистической модели одновременного конкурентного доступа, а вторая - в оптимистической. В этом разделе рассматривается первая форма этого уровня изоляции.\
+        Транзакция, которая читает строку и использует уровень изоляции READ COMMITTED, выполнят проверку только на наличие монопольной блокировки для данной строки. Если такая блокировка отсутствует, транзакция извлекает строку. (Это выполняется с использованием разделяемой блокировки.) Таким образом предотвращается чтение транзакцией данных, которые не были подтверждены и которые могут быть позже отменены. После того, как данные были прочитаны, их можно изменять другими транзакциями.\
+        Применяемые этим уровнем изоляции разделяемые блокировки отменяются сразу же после обработки данных. (Обычно все блокировки отменяются в конце транзакции.) Это улучшает параллельный одновременный конкурентный доступ к данным, но возможность неповторяемого чтения и фантомов продолжает существовать.\
+      
+      * Уровень изоляции REPEATABLE READ\
+        В отличие от уровня изоляции READ COMMITTED, уровень REPEATABLE READ устанавливает разделяемые блокировки на все считываемые данные и удерживает эти блокировки до тех пор, пока транзакция не будет подтверждена или отменена. Поэтому в этом случае многократное выполнение запроса внутри транзакции всегда будет возвращать один и тот же результат. Недостатком этого уровня изоляции является дальнейшее ухудшение одновременного конкурентного доступа, поскольку период времени, в течение которого другие транзакции не могут обновлять те же самые данные, значительно дольше, чем в случае уровня READ COMMITTED.\
+        Этот уровень изоляции не препятствует другим инструкциям вставлять новые строки, которые включаются в последующие операции чтения, вследствие чего могут появляться фантомы.
+      
+      * Уровень изоляции SERIALIZABLE\
+        Уровень изоляции SERIALIZABLE является самым строгим, потому что он не допускает возникновения всех четырех проблем параллельного одновременного конкурентного доступа, перечисленных ранее. Этот уровень устанавливает блокировку на всю область данных, считываемых соответствующей транзакцией. Поэтому этот уровень изоляции также предотвращает вставку новых строк другой транзакцией до тех пор, пока первая транзакция не будет подтверждена или отменена.\
+        Уровень изоляции SERIALIZABLE реализуется, используя метод блокировки диапазона ключа. Суть этого метода заключается в блокировке отдельных строк включительно со всем диапазоном строк между ними. Блокировка диапазона ключа блокирует элементы индексов, а не определенные страницы или всю таблицу. В этом случае любые операции модификации другой транзакцией невозможны, вследствие невозможности выполнения требуемых изменений элементов индекса.\
+        В заключение обсуждения четырех уровней изоляции следует упомянуть, что требуется знать, что чем выше уровень изоляции, тем меньше степень одновременного конкурентного доступа. Таким образом, уровень изоляции READ UNCOMMITTED меньше всего уменьшает одновременный конкурентный доступ. С другой стороны, он также предоставляет наименьшую изоляцию параллельных конкурентных транзакций. Уровень изоляции SERIALIZABLE наиболее сильно уменьшает степень одновременного конкурентного доступа, но гарантирует полную изоляцию параллельных конкурентных транзакций.
+        
+                 Lost update предотвращается на всех уровнях изоляции (= Not Possible)
+           +------------------+--------------+----------------+--------------+ 
+           | Level            | Dirty read   | Non-repeatable |  Phantom     |
+           |                  |              |     read       |              |
+           +------------------+--------------+----------------+--------------+
+           | READ UNCOMMITTED | Possible*    | Possible       | Possible     |
+           +------------------+--------------+----------------+--------------+
+           | READ COMMITTED   | Not Possible | Possible       | Possible     |
+           +------------------+--------------+----------------+--------------+
+           | REPEATABLE READ  | Not Possible | Not Possible   | Possible*    |
+           +------------------+--------------+----------------+--------------+
+           | SERIALIZABLE     | Not Possible | Not Possible   | Not Possible |
+           +------------------+--------------+----------------+--------------+
+         * but not in PG
+         
+         In PostgreSQL, you can request any of the four standard transaction isolation levels, but internally only three distinct isolation levels are implemented, i.e., PostgreSQL's Read Uncommitted mode behaves like Read Committed. This is because it is the only sensible way to map the standard isolation levels to PostgreSQL's multiversion concurrency control architecture.
+         The table also shows that PostgreSQL's Repeatable Read implementation does not allow phantom reads. This is acceptable under the SQL standard because the standard specifies which anomalies must not occur at certain isolation levels; higher guarantees are acceptable. The behavior of the available isolation levels is detailed in the following subsections.
+         Some PostgreSQL data types and functions have special rules regarding transactional behavior. In particular, changes made to a sequence (and therefore the counter of a column declared using serial) are immediately visible to all other transactions and are not rolled back if the transaction that made the changes aborts.
+         PostgreSQL uses Read Committed by default, whereas MySQL has chosen Repeatable Read, which is better isolated, but when PostgreSQL transactions use the Repeatable Read level, they’re more isolated than MySQL transactions.
+         
+         * Уровни изоляции определяют, как транзакции взаимодействуют друг с другом. ACID — это аббревиатура, обозначающая свойства транзакций.
+           Или можно сказать так: аббревиатура ACID обозначает совокупность гарантий относительно поведения базы данных при объединении нескольких действий в единую логическую операцию, которую часто называют транзакцией.
+           - Atomicity (атомарность)
+               Атомарность гарантирует, что никакая транзакция не будет зафиксирована в системе частично. Будут либо выполнены все её подоперации, либо не выполнено ни одной. 
+           - Consistency (согласованность)
+               Транзакция, достигающая своего нормального завершения (англ. end of transaction, EOT) и тем самым фиксирующая свои результаты, сохраняет согласованность базы данных. Другими словами, каждая успешная транзакция по определению фиксирует только допустимые результаты.
+           - Isolation (изоляция)
+               Во время выполнения транзакции параллельные транзакции не должны оказывать влияния на её результат.
+           - Durability (устойчивость)
+               Независимо от проблем на нижних уровнях (к примеру, обесточивание системы или сбои в оборудовании) изменения, сделанные успешно завершённой транзакцией, должны остаться сохранёнными после возвращения системы в работу. Другими словами, если пользователь получил подтверждение от системы, что транзакция выполнена, он может быть уверен, что сделанные им изменения не будут отменены из-за какого-либо сбоя.
+         
   </details>
   
   ---
@@ -1106,79 +1295,118 @@ P.S.S.
   * базы данных SQL должны следовать правилам ACID (атомарность, согласованность, изоляция и долговечность), что может сделать их более медленными и сложными. С другой стороны, базы данных NoSQL часто более просты и могут быть быстрее, поскольку им не нужно следовать правилам ACID.
   
   </details>
-  
+
   ---
-    
+
 - Вопрос №13: [ Какие виды индексов знаете ? расскажите про b tree индекс ]
-  
+
   <details>
     <summary>Ответ</summary>
-  * PostgreSQL поддерживает несколько типов индексов: B-дерево, хеш, GiST, SP-GiST, GIN и BRIN. Для разных типов индексов применяются разные алгоритмы, ориентированные на определённые типы запросов. По умолчанию команда CREATE INDEX создаёт индексы типа B-дерево, эффективные в большинстве случаев.
-    * Семейство B-Tree индексов — это наиболее часто используемый тип индексов, организованных как сбалансированное дерево, упорядоченных ключей. Они поддерживаются практически всеми СУБД как реляционными, так нереляционными, и практически для всех типов данных.
-    Единственное, что, пожалуй, следует здесь отметить, это то, что данный тип индекса оптимален для множества с хорошим распределением значений и высокой мощностью(cardinality-количество уникальных значений).
-    B-деревья могут работать в условиях на равенство и в проверках диапазонов с данными, которые можно отсортировать в некотором порядке. Точнее, планировщик запросов PostgreSQL может задействовать индекс-B-дерево, когда индексируемый столбец участвует в сравнении с одним из следующих операторов: <   <=   =   >=   >
-    * Хеш-индексы работают только с простыми условиями равенства. Планировщик запросов может применить хеш-индекс, только если индексируемый столбец участвует в сравнении с оператором =. 
-    * Стандартный дистрибутив PostgreSQL включает классы операторов GiST для нескольких двумерных типов геометрических данных, что позволяет применять индексы в запросах с операторами: <<   &<   &>   >>   <<|   &<|   |&>   |>>   @>   <@   ~=   &&. GiST-индексы также могут оптимизировать поиск «ближайшего соседа»
-    * SP-GiST позволяет организовывать на диске самые разные несбалансированные структуры данных, такие как деревья квадрантов, k-мерные и префиксные деревья.
-    * GIN-индексы представляют собой «инвертированные индексы», в которых могут содержаться значения с несколькими ключами, например массивы. Инвертированный индекс содержит отдельный элемент для значения каждого компонента, и может эффективно работать в запросах, проверяющих присутствие определённых значений компонентов.
-    * BRIN-индексы (сокращение от Block Range INdexes, Индексы зон блоков) хранят обобщённые сведения о значениях, находящихся в физически последовательно расположенных блоках таблицы. 
-    * Partial index — это индекс, построенный на части таблицы, удовлетворяющей определенному условию самого индекса. Данный индекс создан для уменьшения размера индекса.
-    * Function-based index. Самим же гибким типом индексов являются функциональные индексы, то есть индексы, ключи которых хранят результат пользовательских функций. Функциональные индексы часто строятся для полей, значения которых проходят предварительную обработку перед сравнением в команде SQL. Например, при сравнении строковых данных без учета регистра символов часто используется функция UPPER. Создание функционального индекса с функцией UPPER улучшает эффективность таких сравнений.
-    Кроме того, функциональный индекс может помочь реализовать любой другой отсутствующий тип индексов данной СУБД(кроме, пожалуй, битового индекса, например, Hash для Oracle)
-   
-    
-                             |   MySQL	                  |  PostgreSQL	          | MS SQL	                         |    Oracle
-   ---------------------------------------------------------------------------------------------------------------------------------------
-    B-Tree index	         |   Есть	                  |  Есть	                | Есть	                           |    Есть
-    --------------------------------------------------------------------------------------------------------------------------------------
-    Hash index	             |   в таблицах типа Memory	  |  Есть	                | Нет	                             |    Нет
-    --------------------------------------------------------------------------------------------------------------------------------------
-    Bitmap index	         |   Нет	                  |  Есть	                | Нет	                             |    Есть
-    --------------------------------------------------------------------------------------------------------------------------------------
-    Reverse index	         |   Нет	                  |  Нет	                | Нет	                             |    Есть
-    --------------------------------------------------------------------------------------------------------------------------------------
-    Inverted index	         |   Есть	                  |  Есть	                | Есть	                           |    Есть
-    --------------------------------------------------------------------------------------------------------------------------------------
-    Partial index	         |   Нет	                  |  Есть	                | Есть	                           |    Нет
-    --------------------------------------------------------------------------------------------------------------------------------------
-    Function based index     |   Нет	                  |  Есть	                | Есть	                           |    Есть
-    --------------------------------------------------------------------------------------------------------------------------------------
-    Поддерживаемые	         |   R-Tree с квадратичным    |   Rtree_GiST(исполь-  |  4-х уровневый Grid-based        |    R-Tree c квадратичным разбиением; Quadtree
-    пространственные         |   разбиением	              |  зуется линейное      |  spatial index (отдельные        |
-    индексы(Spatial indexes) |                            |                       |  разбиение) для географических и |
-                             |                            |                       |  геодезических данных)           |
-  
+         * PostgreSQL поддерживает несколько типов индексов: B-дерево, хеш, GiST, SP-GiST, GIN и BRIN. 
+            Для разных типов индексов применяются разные алгоритмы, ориентированные на определённые типы запросов. 
+            По умолчанию команда CREATE INDEX создаёт индексы типа B-дерево, эффективные в большинстве случаев.
+         * Семейство B-Tree индексов — это наиболее часто используемый тип индексов, организованных как сбалансированное дерево, упорядоченных 
+          ключей. Данный тип индекса оптимален для множества с хорошим распределением значений и высокой мощностью
+          (cardinality-количество уникальных значений). С помощью B-дерева можно проиндексировать любые данные, которые могут быть отсортированы, 
+          т. е. для которых применимы операции сравнения больше/меньше/равно. Сюда можно отнести числа, строки, даты и время, логический тип 
+          и любые данные, которые можно ими закодировать.
+          Какой тип запросов может быть ускорен с помощью B-дерева? На самом деле, практически любой запрос, условие которого является выражением,
+          состоящим из полей входящих в индекс, логических операторов и операций равенства/сравнения. Например:
+          - Найти пользователя по его email:SELECT * FROM users WHERE email='user@mail.com'
+          - Найти товары одной из двух категорий:SELECT * FROM goods WHERE category_id = 10 OR category_id = 20
+          - Найти количество пользователей, зарегистрировавшихся в конкретный месяц
+          Принцип работы индекса на основе B-дерева основан на рассмотренном нами ранее алгоритме бинарного поиска: 
+          т. к. все значения упорядочены, мы можем быстро определять области, в которых гарантированно не может быть данных, 
+          удовлетворяющих запрос, существенно снижая таким образом количество перебираемых записей. При поиске в B-дереве необходимо максимум h раз 
+          выполнить линейный или бинарный поиск в относительно небольших списках, где h — это высота дерева. Т.к. B-дерево — сильно-ветвящееся и 
+          сбалансированное, число h обычно совсем невелико. Кроме того, важное и полезное свойство B-дерева при его использовании в СУБД — 
+          возможность эффективно хранить его во внешней памяти. Каждый узел B-дерева обычно хранит такой объем данных, 
+          который может быть эффективно записан на диск или прочитан за одну операцию ввода-вывода.
+         * Хеш-индексы работают только с простыми условиями равенства. Планировщик запросов может применить хеш-индекс, 
+          только если индексируемый столбец участвует в сравнении с оператором =. 
+         * Стандартный дистрибутив PostgreSQL включает классы операторов GiST для нескольких двумерных типов геометрических данных, 
+          что позволяет применять индексы в запросах с операторами: <<   &<   &>   >>   <<|   &<|   |&>   |>>   @>   <@   ~=   &&. 
+          GiST-индексы также могут оптимизировать поиск «ближайшего соседа». GIST — сокращение от «generalized search tree». 
+          Это сбалансированное дерево поиска. Он позволяет распределить данные любого типа по сбалансированному дереву, можно реализовать любой 
+          принцип разбиения любого множества объектов.
+         * SP-GiST позволяет организовывать на диске самые разные несбалансированные структуры данных, такие как деревья квадрантов, 
+         k-мерные и префиксные деревья.
+         * GIN-индексы представляют собой «инвертированные индексы», в которых могут содержаться значения с несколькими ключами, например массивы. 
+          Инвертированный индекс содержит отдельный элемент для значения каждого компонента, и может эффективно работать в запросах, проверяющих 
+          присутствие определённых значений компонентов.
+         * BRIN-индексы (сокращение от Block Range INdexes, Индексы зон блоков) хранят обобщённые сведения о значениях, находящихся в физически 
+          последовательно расположенных блоках таблицы. 
+         * Partial index — это индекс, построенный на части таблицы, удовлетворяющей определенному условию самого индекса. 
+           Данный индекс создан для уменьшения размера индекса.
+         * Function-based index. Самим же гибким типом индексов являются функциональные индексы, то есть индексы, ключи которых хранят результат
+          пользовательских функций. Функциональные индексы часто строятся для полей, значения которых проходят предварительную обработку перед 
+          сравнением в команде SQL. Например, при сравнении строковых данных без учета регистра символов часто используется функция UPPER. Создание
+           функционального индекса с функцией UPPER улучшает эффективность таких сравнений.
+         Кроме того, функциональный индекс может помочь реализовать любой другой отсутствующий тип индексов данной СУБД(кроме, пожалуй, 
+         битового индекса, например, Hash для Oracle)
+          
+          --------------------------------------------------------------------------------------------------------------------------------------- 
+                                    |   MySQL	                  |  PostgreSQL	          | MS SQL	                         |    Oracle
+          ---------------------------------------------------------------------------------------------------------------------------------------
+           B-Tree index	         |   Есть	                  |  Есть	                | Есть	                           |    Есть
+           --------------------------------------------------------------------------------------------------------------------------------------
+           Hash index	             |   в таблицах типа Memory	  |  Есть	                | Нет	                             |    Нет
+           --------------------------------------------------------------------------------------------------------------------------------------
+           Bitmap index	         |   Нет	                  |  Есть	                | Нет	                             |    Есть
+           --------------------------------------------------------------------------------------------------------------------------------------
+           Reverse index	         |   Нет	                  |  Нет	                | Нет	                             |    Есть
+           --------------------------------------------------------------------------------------------------------------------------------------
+           Inverted index	         |   Есть	                  |  Есть	                | Есть	                           |    Есть
+           --------------------------------------------------------------------------------------------------------------------------------------
+           Partial index	         |   Нет	                  |  Есть	                | Есть	                           |    Нет
+           --------------------------------------------------------------------------------------------------------------------------------------
+           Function based index     |   Нет	                  |  Есть	                | Есть	                           |    Есть
+           --------------------------------------------------------------------------------------------------------------------------------------
+           Поддерживаемые	         |   R-Tree с квадратичным    |   Rtree_GiST(исполь-  |  4-х уровневый Grid-based        |    R-Tree c квадратичным разбиением; Quadtree
+           пространственные         |   разбиением	              |  зуется линейное      |  spatial index (отдельные        |
+           индексы(Spatial indexes) |                            |                       |  разбиение) для географических и |
+                                    |                            |                       |  геодезических данных)           |
+         ---------------------------------------------------------------------------------------------------------------------------------------
   
   </details>    
-  
+
   ---
-      
+
 - Вопрос №14: [ CAP теорема ? ]
   
   <details>
     <summary>Ответ</summary>
     
-  * CAP-теорема — утверждение о том, что в распределённых системах нельзя одновременно добиться трёх свойств:
-  
-    Consistency — на всех не отказавших узлах одинаковые (с точки зрения пользователя) данные
-    Availability — запросы ко всем не отказавшим узлам возвращают ответ
-    Partition tolerance — даже если связь в системе стала нестабильной (вплоть до разделения системы на куски), но узлы работают, то система в целом продолжает работать. Возможна потеря связи между компонентами, потеря сообщений
-    
-    Если мы хотим согласованность и доступность, то используем протокол двухфазного коммита: он гарантирует нам согласованное состояние глобально во всей системе и мы всегда можем обслуживать запросы (если только не упал узел с соответствующими данными). Но если потерялась связь (а узлы не упали), то какие-то запросы нельзя обработать, потому что часть данных может быть в одной половине, а часть в другой. Каждый кусок всё ещё будет работать по отдельности, но глобальные транзакции выполнять мы не сможем.
-    Иногда нам не так важна согласованность и мы согласны на простую eventual consistency — это когда информация может быть доступна не сразу везде, а только через какое-то время, если система здорова. Сюда идут gossip-протоколы.
-    Если мы хотим согласованность и толерантность к разделению, то надо жертвовать доступностью. Например, при помощи Paxos мы можем хранить все данные сразу на всех узлах, но тогда узлы, оказавшиеся в меньшинстве, ничего сделать не могут.
-    
-    
-  * BASE-архитектура
-    BASE (от англ. Basically Available, Soft-state, Eventually consistent — базовая доступность, неустойчивое состояние, согласованность в конечном счёте), при этом такой подход напрямую противопоставляется ACID. 
-    Под базовой доступностью подразумевается такой подход к проектированию приложения, чтобы сбой в некоторых узлах приводил к отказу в обслуживании только для незначительной части сессий при сохранении доступности в большинстве случаев. 
-    Неустойчивое состояние подразумевает возможность жертвовать долговременным хранением состояния сессий (таких как промежуточные результаты выборок, информация о навигации, контексте), при этом концентрируясь на фиксации обновлений только критичных операций. Согласованности в конечном счёте, трактующейся как возможность противоречивости данных в некоторых случаях, но при обеспечении согласования в практически обозримое время, посвящено значительное количество самостоятельных исследований.  
-  
-  
-  </details>
-  
-  ---
+      * CAP-теорема — утверждение о том, что в распределённых системах нельзя одновременно добиться трёх свойств:
       
+        Consistency — на всех не отказавших узлах одинаковые (с точки зрения пользователя) данные
+        Availability — запросы ко всем не отказавшим узлам возвращают ответ
+        Partition tolerance — даже если связь в системе стала нестабильной (вплоть до разделения системы на куски), но узлы работают, 
+        то система в целом продолжает работать. Возможна потеря связи между компонентами, потеря сообщений
+        
+        Если мы хотим согласованность и доступность, то используем протокол двухфазного коммита: он гарантирует нам согласованное состояние 
+        глобально во всей системе и мы всегда можем обслуживать запросы (если только не упал узел с соответствующими данными). 
+        Но если потерялась связь (а узлы не упали), то какие-то запросы нельзя обработать, потому что часть данных может быть в одной половине, 
+        а часть в другой. Каждый кусок всё ещё будет работать по отдельности, но глобальные транзакции выполнять мы не сможем.
+        Иногда нам не так важна согласованность и мы согласны на простую eventual consistency — это когда информация может быть доступна не сразу
+         везде, а только через какое-то время, если система здорова. Сюда идут gossip-протоколы.
+        Если мы хотим согласованность и толерантность к разделению, то надо жертвовать доступностью. Например, при помощи Paxos мы можем хранить все
+         данные сразу на всех узлах, но тогда узлы, оказавшиеся в меньшинстве, ничего сделать не могут.
+        
+        
+      * BASE-архитектура
+        BASE (от англ. Basically Available, Soft-state, Eventually consistent — базовая доступность, неустойчивое состояние, согласованность в 
+        конечном счёте), при этом такой подход напрямую противопоставляется ACID. 
+        Под базовой доступностью подразумевается такой подход к проектированию приложения, чтобы сбой в некоторых узлах приводил к отказу 
+        в обслуживании только для незначительной части сессий при сохранении доступности в большинстве случаев. 
+        Неустойчивое состояние подразумевает возможность жертвовать долговременным хранением состояния сессий (таких как промежуточные результаты 
+        выборок, информация о навигации, контексте), при этом концентрируясь на фиксации обновлений только критичных операций. Согласованности в 
+        конечном счёте, трактующейся как возможность противоречивости данных в некоторых случаях, но при обеспечении согласования в практически 
+        обозримое время, посвящено значительное количество самостоятельных исследований.  
+  </details>    
+
+  ---
+
 - Вопрос №15: [ Распределенные транзакции 2PC и Saga ]
   
   <details>
@@ -1232,9 +1460,9 @@ P.S.S.
   отличия - 2PC про изолированность транзакций, но медленнее
   
   </details>
-  
+
   ---
-        
+
 - Вопрос №16: [ чем отличается b tree от binary tree? ]
   
   <details>
@@ -1250,8 +1478,8 @@ P.S.S.
   
   </details>
 
-    ---
-        
+   ---
+
 - Вопрос №17: [ почему нельзя использовать мапу в качестве индекса? ]
   
   <details>
@@ -1259,8 +1487,8 @@ P.S.S.
       * обход по мапе в случайном порядке - нельзя будет использовать сортировку, сравнивать
   </details>
 
-    ---
-        
+   ---
+
 - Вопрос №18: [ чем отличается unique index от primary key? ]
   
   <details>
@@ -1273,26 +1501,30 @@ P.S.S.
   </details>
   
   ---
+
 - Вопрос №19: [ advisory locks? ]
   
   <details>
     <summary>Ответ</summary>
 
       * Блокировка произвольного идентификатора.
-        «Обычные» блокировки в PG всегда привязаны к конкретному объекту БД (таблице, записи, странице данных) и процессу, обслуживающему соединение. Advisory locks — тоже к процессу, но вместо реального объекта — абстрактный идентификатор, который можно задать как (bigint) или как (integer, integer).
+        «Обычные» блокировки в PG всегда привязаны к конкретному объекту БД (таблице, записи, странице данных) и процессу, обслуживающему 
+        соединение. Advisory locks — тоже к процессу, но вместо реального объекта — абстрактный идентификатор, который можно задать как (bigint)
+         или как (integer, integer).
       * CAS-проверка возможности захвата блокировки. 
-        CAS — это Compare-and-Set, то есть проверка возможности захвата и сам захват блокировки проходят как одна атомарная операция, и между ними заведомо никто не может «вклиниться».
+        CAS — это Compare-and-Set, то есть проверка возможности захвата и сам захват блокировки проходят как одна атомарная операция, 
+        и между ними заведомо никто не может «вклиниться».
       * Не-захват без исключений и ожиданий.
-        «Обычные» блокировки существуют в модели «Если уж ты попросил блокировку — то жди. Если не захотел ждать (NOWAIT, statement_timeout, lock_timeout) — вот тебе исключение». Этот подход сильно мешает внутри транзакции, потому что тогда приходится или реализовывать блок BEGIN-EXCEPTION-END для обработки, или откатывать (ROLLBACK) транзакцию.
+        «Обычные» блокировки существуют в модели «Если уж ты попросил блокировку — то жди. Если не захотел ждать 
+        (NOWAIT, statement_timeout, lock_timeout) — вот тебе исключение». Этот подход сильно мешает внутри транзакции, 
+        потому что тогда приходится или реализовывать блок BEGIN-EXCEPTION-END для обработки, или откатывать (ROLLBACK) транзакцию.
         Рекомендательные же блокировки, вызываемые try-функциями, просто возвращают TRUE/FALSE.     
       
       * advisory locks изначально были спроектированы с возможностью удержания блокировки и за рамками транзакции
-      
-            
-  </details>
-  
+  </details>          
+
   ---
-  
+
 - Вопрос №20: [ можно ли накатить транзакции в бд частично? (savepoint) ]
   
   <details>
@@ -1372,9 +1604,9 @@ P.S.S.
       * выявление узких мест:
         - Анализ планов выполнения запросов. росматривая план выполнения, вы можете выявить потенциальные узкие места, 
             такие как сканирование таблиц, дорогостоящие соединения или ненужные операции сортировки. 
-            EXPLAIN — show the execution plan of a statement
+            EXPLAIN — show the execution plan of a statement (без выполнения запроса)
             EXPLAIN [ ( option [, ...] ) ] statement
-            EXPLAIN [ ANALYZE ] [ VERBOSE ] statement
+            EXPLAIN [ ANALYZE ] [ VERBOSE ] statement (выполняет запрос)
         - Используйте профилировщики и инструменты диагностики. Измерения ключевых показателей производительности (KPI), таких как время отклика, 
             загрузка ЦП, потребление памяти и дисковый ввод-вывод.
         - Изучите показатели базы данных. Мониторинг показателей производительности базы данных, таких как количество одновременных подключений, 
@@ -1414,6 +1646,9 @@ P.S.S.
         - Замена предложений IN операциями EXISTS или JOIN. Не использвать IN, если он возвращает много записей
         - Убедитесь, что в предложениях WHERE используются индексированные предикаты — условия, которые можно эффективно оценить с помощью доступных индексов. 
         - Создание материализованных представлений для сложных вычислений
+        - Возможно, будет полезна нормализация или денормализация таблиц
+        
+        * если видим sequence scan при explain analyze колонка не попала в индекс
         
   </details>    
 
@@ -1435,9 +1670,9 @@ P.S.S.
       * Пример: исключение диапазона ip адресов, исключение неоплаченных счетов (если их мало) из таблицы со всем счетами
             
   </details>    
-    
+
    ---
-    
+
 - Вопрос №24: [ колоночные бд ]
   
   <details>
@@ -1488,7 +1723,6 @@ P.S.S.
             
   </details>    
   
-     
     ---
         
 - Вопрос №26: [ пессимистичные и оптимистичные блокировки ]
@@ -1513,13 +1747,194 @@ P.S.S.
         При блокировке при записи блокировка даных происходит при их обновлении в базе данных до конца текущей транзакции.
         Блокировка с данных снимается либо при коммите, либо при откате транзакции.
         
-        
   </details>
-      
-      
+ 
+    ---
+        
+- Вопрос №27: [ vacuum в postgres, оптимизация ]
+  
+  <details>
+  
+    <summary>Ответ</summary>
+       * Управление параллельным доступом посредством многоверсионности (Multi-Version Concurrency Control) — один из основополагающих принципов, 
+       делающих PostgreSQL таким популярным решением среди СУБД. Однако одним из неприятных моментов является то, что для каждой измененной или 
+       удаленной записи создаются неиспользуемые копии, от которых в конечном итоге надо избавляться. Неправильно настроенный процесс автоочистки
+        (autovacuum) может снижать производительность. При этом чем сервер загруженнее, тем сильнее проявляется проблема.
+        * Параметр autovacuum_max_workers, maintenance_work_mem, autovacuum_freeze_max_age 
+        * не рекомендуется, но можно настроить параметр хранения таблиц 
+            ALTER TABLE .. SET STORAGE_PARAMETER
+        * С помощью расширения pg_repack можно перестроить и реорганизовать таблицы и индексы в условиях продакшена
+        
+       * VACUUM — провести сборку мусора вручную и, возможно, проанализировать базу данных
+       * Синтаксис
+         - VACUUM [ ( параметр [, ...] ) ] [ таблица_и_столбцы [, ...] ]
+         - VACUUM [ FULL ] [ FREEZE ] [ VERBOSE ] [ ANALYZE ] [ таблица_и_столбцы [, ...] ]    
+         
+       * VACUUM высвобождает пространство, занимаемое «мёртвыми» кортежами. При обычных операциях PostgreSQL кортежи, удалённые или устаревшие в 
+       результате обновления, 
+         физически не удаляются из таблицы; они сохраняются в ней, пока не будет выполнена команда VACUUM. Таким образом, периодически необходимо 
+         выполнять VACUUM, 
+         особенно для часто изменяемых таблиц.
+         
+       * Простая команда VACUUM (без FULL) только высвобождает пространство и делает его доступным для повторного использования. 
+            Эта форма команды может работать параллельно с обычными операциями чтения и записи таблицы, так она не требует исключительной 
+            блокировки. Однако освобождённое место не возвращается операционной системе (в большинстве случаев); 
+            оно просто остаётся доступным для размещения данных этой же таблицы. 
+         VACUUM FULL переписывает всё содержимое таблицы в новый файл на диске, не содержащий ничего лишнего, что позволяет возвратить 
+            неиспользованное пространство операционной системе. Эта форма работает намного медленнее и запрашивает блокировку ACCESS EXCLUSIVE 
+            для каждой обрабатываемой таблицы.  
+  </details>  
+
   ---
+        
+- Вопрос №: [ Страницы данных и индексов ]
+  
+  <details>
+  
+    <summary>Ответ</summary>
+       * В основе Postgres лежит многоверсионная модель (MVCC https://www.postgresql.org/docs/current/mvcc-intro.html). 
+       Её суть в том, что каждая строка в таблице может иметь несколько версий, 
+       при этом транзакции видят не более одной из этих версий, но необязательно одну и ту же. 
+       Это позволяет работать нескольким транзакциям одновременно и практически не оказывать влияния друг на друга. 
+       Очевидно, что все эти версии необходимо хранить. Postgres работает с памятью постранично и страница – это минимальный объём данных, 
+       который можно считать с диска либо записать.
+       *  Каждая таблица и индекс в PostgreSQL состоит из массива страниц. Страница является структурой данных, которая предназначена для хранения 
+       записей таблицы или указателей индекса. Страница базы данных в PostgreSQL обычно имеет размер 8Кб, но его можно изменить при компиляции 
+       сервера. Поскольку таблица не имеет порядка в PostgreSQL, при вставке строки в таблицу она попадает на первую страницу, на которую может 
+       поместиться. Для этого PostgreSQL отслеживает заполнение каждой страницы посредством структуры данных, известной как карта свободного 
+       пространства (Free Space Map - FSM). Структура FSM содержит по одному байту на страницу, и этот байт показывает, насколько заполнена страница. 
+       Если ни на одной странице в таблице нет достаточно места для сохранения записи данных, в таблицу добавляется новая страница, 
+       на которую и помещается запись.
+
+  </details>  
+
+  ---
+        
+- Вопрос №: [ сравнение hash и b tree индексов ] 
+  
+  <details>
+  
+    <summary>Ответ</summary>
     
+       *  Минусы хэш индексов:
+        - Хэш-индексы в PostgreSQL поддерживаются только для ключа из единственного столбца
+        - хэш-индексы не имеют возможности накладывать ограничение уникальности
+        - в старых версиях - До PostgreSQL версии 10 хэш-индексы не очень хорошо работали при высоко конкурентной нагрузке и 
+            не поддерживали протокол журнализации WAL, это означает, что они часто будут повреждены в случае восстановления после сбоя.
+        
+       * Плюсы
+        - хэш-индекс может размещать поисковые значения ключа без необходимости какого-либо перемещения по древовидной структуре данных. 
+            Это может стать преимуществом для больших таблиц из-за уменьшения операций ввода вывода при поиске необходимых записей 
+        - Поскольку индексы B-Tree хранят фактические значения ключа а структуре индекса, индекс может сильно разрастись. 
+            Индексы B-Tree также имеют ограничения на длину ключа, который они хранят.
+            Хэш-индексы, в свою очередь, не хранят фактические значения ключа, а только 4-байтовые хэшированные значения ключа со знаком.
+        - И последним преимуществом хэш-индексов над индексами B-Tree состоит в том, что на размер хэш-индекса не влияет, 
+            насколько селективным является значение ключа индекса.    
+            
+  </details>  
+
+  ---
+        
+- Вопрос №: [ составной индекс в postgres ]
+  
+  <details>
+  
+    <summary>Ответ</summary>
+    
+       *  В настоящее время составными могут быть только индексы типов B-дерево, GiST, GIN и BRIN. 
+       *  Составной индекс-B-дерево может применяться в условиях с любым подмножеством столбцов индекса, но наиболее эффективен он при ограничениях
+        по ведущим (левым) столбцам. Точное правило состоит в том, что сканируемая область индекса определяется условиями равенства с ведущими 
+        столбцами и условиями неравенства с первым столбцом, не участвующим в условии равенства. Ограничения столбцов правее них также проверяются 
+        по индексу, так что обращение к таблице откладывается, но на размер сканируемой области индекса это уже не влияет. Например, если есть 
+        индекс по столбцам (a, b, c) и условие WHERE a = 5 AND b >= 42 AND c < 77, индекс будет сканироваться от первой записи a = 5 и b = 42 до 
+        последней с a = 5. Записи индекса, в которых c >= 77, не будут учитываться, но, тем не менее, будут просканированы. Этот индекс в принципе 
+        может использоваться в запросах с ограничениями по b и/или c, без ограничений столбца a, но при этом будет просканирован весь индекс, так 
+        что в большинстве случаев планировщик предпочтёт использованию индекса полное сканирование таблицы.
+        
+  </details>  
+
+  ---  
+        
+- Вопрос №: [ для чего нужен внешний ключ? ]
+  
+  <details>
+  
+    <summary>Ответ</summary>
+    
+       *   Foreign key (внешний ключ) в реляционных базах данных используется для установления связей между таблицами. 
+            Главная цель внешнего ключа - обеспечить целостность данных и поддерживать отношения между таблицами.
+          
+          Вот основные задачи и преимущества использования внешних ключей:
+          
+          1. Связи между таблицами: Foreign key позволяет связать две таблицы по значениям в одном из столбцов. Например, если у вас есть 
+            таблица с информацией о заказах и таблица с информацией о клиентах, вы можете использовать внешний ключ, чтобы связать каждый заказ с 
+            конкретным клиентом.
+          
+          2. Целостность данных: Внешний ключ обеспечивает целостность данных, предотвращая возможность добавления записей с некорректными или 
+            несуществующими значениями в столбце, связанном с внешним ключом. Например, если в таблице заказов есть внешний ключ, 
+            указывающий на идентификатор клиента, вы не сможете добавить заказ для несуществующего клиента.
+          
+          3. Управление связями: Внешние ключи также используются для определения типа связи между таблицами, таких как один к одному, 
+            один ко многим или многие ко многим. Это позволяет определить, каким образом связаны данные в разных таблицах.
+            
+  </details>  
+
+  ---
+        
+- Вопрос №: [ сложность поиска по b tree ]
+  
+  <details>
+  
+    <summary>Ответ</summary>
+    
+       *  Сложность поиска по B-дереву (B-tree) зависит от высоты дерева и того, насколько оно сбалансировано. 
+           B-дерево разработано для эффективного выполнения операций вставки, удаления и поиска в отсортированных данных, 
+           обеспечивая сбалансированное дерево.
+          
+          Для сбалансированного B-дерева с высотой h и степенью B (количество ключей в узле):
+          
+          Время поиска:
+          В худшем случае оно пропорционально высоте дерева, то есть O(log_B n), где n - количество ключей в дереве.
+          B-деревья обеспечивают хорошую сбалансированность, что гарантирует, что высота дерева остается логарифмической относительно 
+          количества ключей.
+          
+          Пространственная сложность:
+          Пространственная сложность B-дерева - O(n), где n - количество ключей.
+          Каждый узел дерева имеет фиксированное количество ключей и дочерних узлов, что обеспечивает эффективное использование пространства.
+          
+          Сложность вставки и удаления:
+          В сбалансированном B-дереве вставка и удаление ключей также выполняются за O(log_B n) времени, 
+          поскольку эти операции также зависят от высоты дерева.
+          
+          Общий вывод состоит в том, что B-дерево обеспечивает эффективные операции поиска, вставки и удаления, и его сложность поиска является 
+          логарифмической относительно количества ключей в дереве. Это делает B-дерево эффективной структурой данных 
+          для организации отсортированных данных и эффективного выполнения запросов на поиск в базах данных и файловых системах.
+       
+       
+  </details>  
+
+  ---  
+           
+- Вопрос №: [  ]
+  
+  <details>
+  
+    <summary>Ответ</summary>
+    
+       *  
+  </details>  
+
+  ---   
 </details>
+
+
+
+
+
+
+
+
+
 
 <!-- Алгоритмы -->
 <details>
@@ -3179,7 +3594,40 @@ P.S.S.
       - Сложность: Сложная архитектура и высокий порог входа.
       - Экосистема: Меньше готовых решений и интеграций по сравнению с Kubernetes.
     </details>
+    
+  ---
 
+  - Вопрос №9: [ чем отличается докер от виртуализации? ]
+
+    <details>
+      <summary>Ответ</summary>
+
+        Докер (Docker) и виртуализация - это два различных подхода к управлению контейнерами и виртуализации ресурсов. 
+        Вот основные различия между ними:
+        
+        1. Уровень виртуализации:
+        Докер: Использует контейнеризацию на уровне операционной системы (OS). Контейнеры в Docker делят ядро ОС с хост-системой и изолируют   
+        приложения и их зависимости в контейнерах.
+        Виртуализация: Использует гипервизоры, которые создают виртуальные машины (ВМ) с полными виртуальными операционными системами. 
+        Гипервизоры работают на уровне аппаратного обеспечения и создают изолированные среды для ВМ.
+        2. Изоляция:
+        Докер: Изолирует приложения и их зависимости в контейнерах, но они используют общие ресурсы ядра операционной системы.
+        Виртуализация: Предоставляет полную изоляцию между виртуальными машинами. Каждая ВМ имеет свою собственную копию операционной системы.
+        3. Ресурсы:
+        Докер: Эффективно использует ресурсы, так как контейнеры делят общий ядро и используют общие ресурсы, такие как ядро CPU и память.
+        Виртуализация: Требует больше ресурсов, так как каждая виртуальная машина имеет собственное ядро ОС и запускает полные операционные системы.
+        4. Запуск:
+        Докер: Запускается на основе образов, которые включают в себя все необходимые зависимости и настройки для приложения.
+        Виртуализация: Требует установки операционной системы для каждой виртуальной машины.
+        5. Скорость:
+        Докер: Запускает контейнеры быстрее, так как они используют общее ядро ОС.
+        Виртуализация: Запуск виртуальных машин может занимать больше времени, так как требуется загрузка и настройка полной операционной системы.
+        6. Использование ресурсов:
+        Докер: Эффективно использует ресурсы, так как не требует запуска полных операционных систем для каждого контейнера.
+        Виртуализация: Имеет больший "экономический" оверхед из-за полных операционных систем в каждой виртуальной машине.
+        
+    </details>
+    
   ---
 
   </details>
@@ -3434,7 +3882,7 @@ P.S.S.
 
   ---
 
-  - Вопрос №2: [ Какие среда виртуализации и управления облачной инфраструктурой знаешь? ]
+  - Вопрос №2: [ Какие среды виртуализации и управления облачной инфраструктурой знаешь? ]
 
     <details>
       <summary>Ответ</summary>
@@ -3576,6 +4024,156 @@ P.S.S.
   </details>
 
   ---
+
+- Вопрос №6: [ Domain Driven Design ]
+  
+  <details>
+    <summary>Ответ</summary>
+  
+  * Domain-Driven Design (development) — предметно-ориентированное проектирование. 
+  * Domain-Driven Design — подход к проектированию ПО, в основе которого положено тесное сотрудничество клиента и разработчиков. 
+    Заказчик посвящает команду в бизнес-логику своей компании, объясняет, как устроена ее работа, участвует в проектировании сервиса. 
+    Основной принцип DDD — разделение приложения на домены.
+  * Домен — предметная область, которая описывает совокупность проблем и целей бизнеса. 
+    Можно сказать, что это — отрасль деятельности компании заказчика, которую необходимо автоматизировать с помощью IT-решения. 
+    Например, если компания занимается грузовыми перевозками, в домен будут входить все связанные с этим проблемы: выбрать машину, 
+    построить маршрут и другие.
+  * В проектируемом веб-сервисе выделяют также основной домен — core domain, ядро продукта, его основную функцию. 
+  * Так, если продолжить пример с перевозкой грузов: основная задача приложения — обеспечить доставку посылки из пункта А в пункт Б.
+     - Ubiquitous Language— язык описания или универсальный язык. 
+        Он нужен, чтобы описание домена и моделей было однозначным, не возникало противоречий.
+    - Bounded Context — ограниченный контекст. Ограниченная предметная область, которая отвечает за строго определенный функционал,
+        со своим языком описания. 
+    - Репозитории (Repositories): Это механизмы для доступа к сущностям и агрегатам из базы данных. 
+        Репозитории предоставляют абстракцию для сохранения и извлечения данных.
+    - Сервисы (Services): Это объекты, предназначенные для выполнения операций, которые не являются естественной обязанностью какой-либо 
+        конкретной сущности или значения.
+    - Фабрики (Factories): Они отвечают за создание сложных объектов или агрегатов, обеспечивая соблюдение инвариантов.    
+  * Основной принцип работы по DDD — разделение предметной области на ограниченные контексты со своими языками описания. Посетитель, модератор, 
+    администратор — это разные типы пользователей, каждый из которых относится к своей области.
+  * Чтобы сервис корректно работал и выполнял все свои функции, между модулями системы нужно настроить связи. 
+    В DDD-подходе это называется context mapping.
+        - Партнерство (Partnership), общее ядро (Shared Kernel): используются для тесно связанных между собой контекстах.
+        - Потребитель-поставщик (Customer-Supplier), конформист (Conformist): нужны, когда для разных контекстов приходится использовать 
+            один универсальный язык.
+        - Антикоррупционный слой (Anticorruption Layer): применяется, когда нужна прослойка между универсальным языком источника данных.
+        - Open Host Service, опубликованный язык (Published Language): используются на стороне источника данных для стандартизации протокола 
+            обмена и приема.
+  
+  </details>
+
+  ---
+
+- Вопрос №7: [ Гексагональная архитектура ]
+  
+  <details>
+    <summary>Ответ</summary>
+  
+     * Гексагональная архитектура, также известная как порт-адаптерная архитектура или Clean Architecture, предложенная Эриком Эвансом, 
+       представляет собой подход к проектированию программного обеспечения, в котором ядро бизнес-логики выделено в центральную часть (ядро), 
+       а внешние компоненты, такие как интерфейсы пользователя, базы данных, веб-сервисы, представляются как адаптеры вокруг ядра. 
+       Это позволяет легко заменять внешние компоненты, не затрагивая ядро системы.
+      
+                           +---------------------+
+                           | External Services  |
+                           | (Web, Database,     |
+                           |  Third-party, etc.) |
+                           +----------^----------+
+                                      |
+                                      |
+                                      v
+                           +---------------------+
+                           |      Adapters       |
+                           | (Converters, Drivers)|
+                           +----------^----------+
+                                      |
+                                      |
+                +---------------------|---------------------+
+                |                     |                     |
+                v                     v                     v
+        +------------------+  +------------------+  +------------------+
+        |    Adapter       |  | Application Core |  |    Adapter       |
+        | (Web Interface,  |  | (Business Logic)  |  | (Database Adapter|
+        |  CLI Interface,  |  |                   |  |   or Repository) |
+        |  etc.)           |  +-------------------+  +------------------+
+        +------------------+         ^         |
+                                      |         |
+                                      |         |
+                                      v         |
+                           +------------------+  |
+                           |   Domain Logic   |  |
+                           | (Entities, Value  |  |
+                           | Objects, Services)|  |
+                           +------------------+  |
+                                      ^         |
+                                      |         |
+                                      +---------+
+
+        ------
+
+        Объяснение элементов схемы:
+        
+        External Services: Внешние службы, такие как веб-сервисы, базы данных, интерфейсы пользователя и т.д.
+        Adapters (Converters, Drivers): Адаптеры, которые связывают внешние службы с ядром приложения. Эти адаптеры преобразуют 
+            данные и вызывают методы ядра.
+        Application Core (Business Logic): Ядро приложения, содержащее бизнес-логику. Это место, где находятся сущности, значение и сервисы,
+            представляющие бизнес-правила.
+        Domain Logic (Entities, Value Objects, Services): Содержит основную бизнес-логику, такую как сущности, значение и сервисы.
+        External Interfaces: Интерфейсы, через которые внешние компоненты взаимодействуют с приложением (REST API, CLI, GUI и т.д.).
+        
+        Гексагональная архитектура помогает создавать гибкие, легко тестируемые и поддерживаемые приложения, разделяя различные аспекты системы 
+        и уменьшая зависимости между ними.
+  
+  </details>
+
+  ---
+
+- Вопрос №8: [ CQRS ]
+  
+  <details>
+    <summary>Ответ</summary>
+  
+  * CQRS (Command Query Responsibility Segregation) - это шаблон проектирования, который разделяет ответственность за изменение состояния системы
+   (команды) и получение информации о состоянии системы (запросы). Этот подход позволяет оптимизировать обработку команд и запросов независимо друг
+    от друга, что может быть полезным в случае сложных приложений с различными потребностями по изменению и чтению данных.
+    
+    Вот простая схема CQRS:
+    
+    +------------------+         +----------------------+
+    | Command Handler  |         | Query Handler        |
+    |                  |         |                      |
+    |   +----------+   |         |   +--------------+   |
+    |   | Command  |   |         |   |   Query      |   |
+    |   | Bus      |---|-------->|---|   Bus        |   |
+    |   +----------+   |         |   +--------------+   |
+    +------------------+         +----------------------+
+             |                            |
+             v                            v
+    +------------------+         +----------------------+
+    | Aggregate Root   |         | Read Model          |
+    |                  |         |                      |
+    |   +----------+   |         |   +--------------+   |
+    |   |  Event   |   |         |   |   Query      |   |
+    |   |  Store   |---|-------->|---|   Database   |   |
+    |   +----------+   |         |   +--------------+   |
+    +------------------+         +----------------------+
+    Объяснение элементов схемы:
+    
+    Command Handler: Обрабатывает команды, изменяющие состояние системы. Он отправляет команды агрегатам (Aggregate Roots).
+    Query Handler: Обрабатывает запросы на чтение данных из системы. Извлекает данные из Read Model (модель для чтения).
+    Command Bus: Механизм, который направляет команды от Command Handler к агрегатам.
+    Query Bus: Механизм, который направляет запросы от Query Handler к Read Model.
+    Aggregate Root: Объект, ответственный за обработку команд и содержащий логику бизнес-правил.
+    Event Store: Хранит события, которые представляют изменения состояния системы. События используются для обновления Read Model.
+    Read Model: Хранит данные, предназначенные для чтения. Эти данные оптимизированы для конкретных запросов.
+    Query Database: Хранит данные для запросов, оптимизированных для чтения.
+    
+    CQRS обеспечивает гибкость и масштабируемость, позволяя оптимизировать хранилища данных для конкретных требований изменения и чтения.
+  
+  </details>
+
+  ---
+
 
 </details>
 
@@ -3836,7 +4434,7 @@ P.S.S.
       <summary>Ответ</summary>
 
     * Глобальная переменная - это переменная уровня пакета, то есть объявленная вне функции.
-      Глобальная переменная также может быть доступна за рамками пакета, конечно только в том случае, если ее наименование начинается в верхнем регистре.
+      Глобальная переменная также может быть доступна за рамками пакета, конечно, только в том случае, если ее наименование начинается в верхнем регистре.
 
     </details>
 
@@ -3935,9 +4533,10 @@ P.S.S.
     <details>
       <summary>Ответ</summary>
 
-    * "&" - это адрес блока памяти. То есть &myVar - это адрес того места в памяти, где хранятся данные переменной myVar. Тогда как "*" можно использовать в двух вариантах:
-      чтобы объявить тип-указатель var pointVar *int. В данном случае указатель на int;
-      чтобы получить значение по адресу *pointVar. Обратный предыдущему процесс, и здесь мы получим значение по адресу pointVar.
+    * "&" - это адрес блока памяти. То есть &myVar - это адрес того места в памяти, где хранятся данные переменной myVar. 
+      Тогда как "*" можно использовать в двух вариантах:
+        - чтобы объявить тип-указатель var pointVar *int. В данном случае указатель на int;
+        - чтобы получить значение по адресу *pointVar. Обратный предыдущему процесс, и здесь мы получим значение по адресу pointVar.
 
     </details>
 
@@ -4374,6 +4973,7 @@ P.S.S.
       len это длина слайса - то количество элементов, которое в нём сейчас находится.
       cap - это ёмкость слайса - то количество элементов, которые мы можем записать в слайс сверх len без его дальнейшего расширения.
       Array - это последовательно выделенная область памяти. Частью типа array является его размер, который в том числе является не изменяемым.
+      Если массивы имеют разную длину, то это разные типы при сравнении.
 
     </details>
 
@@ -4483,7 +5083,7 @@ P.S.S.
       Если ключ не найден в map в ответ мы получим дефолтное значение для типа значений map. То есть,
       для строки - это будет пустая строка, для int - 0 и так далее. Для того, чтобы точно понять, что в map
       действительно есть значение, хранящееся по переданному ключу, необходимо использовать специальный синтаксис.
-      А именно, возвращать не только само значение, но и булевую переменную, которая показывает удалось-ли получить
+      А именно, возвращать не только само значение, но и булевую переменную, которая показывает удалось ли получить
       значение по ключу.
 
     </details>
@@ -4920,7 +5520,7 @@ P.S.S.
 
   ---
 
-    - Вопрос №2: [ Как сделать select неблокирующим? ]
+  - Вопрос №2: [ Как сделать select неблокирующим? ]
 
     <details>
       <summary>Ответ</summary>
@@ -4939,7 +5539,7 @@ P.S.S.
       <summary>Ответ</summary>
 
     * Первым выполнится тот case в select, который будет готов. При одновременной отправке данных в каналы,
-      прослушиваемые в select порядок операций не гарантирован.
+      прослушиваемые в select порядок операций не гарантирован - псведо рандомно - т.е. не предыдущий сработавший case
 
     </details>
 
@@ -5502,7 +6102,7 @@ P.S.S.
 
   ---
 
-  - Вопрос №3: [ Что выведет код? () ] 
+  - Вопрос №3: [ Что выведет код? (not buf chan) ] 
 
   <details>
       <summary>Код</summary>
@@ -5546,7 +6146,7 @@ P.S.S.
 
   ---
 
-  - Вопрос №4: [ Что выведет код? () ] 
+- Вопрос №4: [ Что выведет код? () ] 
 
   <details>
       <summary>Код</summary>
@@ -5587,12 +6187,12 @@ P.S.S.
     processed: cmd.1
     processed: cmd.2
 
-    </details>
+  </details>
 
 
   ---
 
-  - Вопрос №5: [ Что выведет код? () ] 
+- Вопрос №5: [ Что выведет код? () ] 
 
   <details>
       <summary>Код</summary>
@@ -5631,9 +6231,10 @@ P.S.S.
     - Ответ: 6
 
 
-    </details>
+   </details>
 
-
+  ---
+    
   </details> 
 
 
@@ -5698,9 +6299,9 @@ P.S.S.
     </details>
 
 
-    -----
+  ---
 
-    - Вопрос №2: [ Что выведет код? (ошибка на миллион) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+- Вопрос №2: [ Что выведет код? (ошибка на миллион) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
 
     <details>
       <summary>Код</summary>
@@ -5748,6 +6349,8 @@ P.S.S.
     1. слева определн и тип и значение = нил, справа ни того, ни другого
       
     - Ответ: failed to run, error:  <nil>
+
+  ---
 
     </details>
 
@@ -7144,11 +7747,10 @@ P.S.S.
       а в мейне p = changePointer(p)
       
     - Ответ: 5 5
-
+    
     </details>
 
-
-    -----
+    ---
 
     - Вопрос №2: [ Что выведет код? (change name) ] ![Static Badge](https://  img.shields.io/badge/Wow-yellow?color=yellow)
 
