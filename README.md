@@ -5993,10 +5993,7 @@ P.S.S.
 
   ---
 
-
-  </details> 
-
----
+  </details>
 
 </details>
 
