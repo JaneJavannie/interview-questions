@@ -1593,7 +1593,7 @@ P.S.S.
         эффективнее, чем несколько случайных чтений.    
             
   </details>
-    
+
   ---
   
 - Вопрос №22: [ оптимизация запросов ]
@@ -1791,7 +1791,7 @@ P.S.S.
 
   ---
         
-- Вопрос №: [ Страницы данных и индексов ]
+- Вопрос №28: [ Страницы данных и индексов ]
   
   <details>
   
@@ -1814,7 +1814,7 @@ P.S.S.
 
   ---
         
-- Вопрос №: [ сравнение hash и b tree индексов ] 
+- Вопрос №29: [ сравнение hash и b tree индексов ] 
   
   <details>
   
@@ -1839,7 +1839,7 @@ P.S.S.
 
   ---
         
-- Вопрос №: [ составной индекс в postgres ]
+- Вопрос №30: [ составной индекс в postgres ]
   
   <details>
   
@@ -1859,7 +1859,7 @@ P.S.S.
 
   ---  
         
-- Вопрос №: [ для чего нужен внешний ключ? ]
+- Вопрос №31: [ для чего нужен внешний ключ? ]
   
   <details>
   
@@ -1885,7 +1885,7 @@ P.S.S.
 
   ---
         
-- Вопрос №: [ сложность поиска по b tree ]
+- Вопрос №32: [ сложность поиска по b tree ]
   
   <details>
   
@@ -1913,18 +1913,16 @@ P.S.S.
           Общий вывод состоит в том, что B-дерево обеспечивает эффективные операции поиска, вставки и удаления, и его сложность поиска является 
           логарифмической относительно количества ключей в дереве. Это делает B-дерево эффективной структурой данных 
           для организации отсортированных данных и эффективного выполнения запросов на поиск в базах данных и файловых системах.
-       
-       
-  </details>  
+
+  </details>
 
   ---  
-           
+
 - Вопрос №: [  ]
   
   <details>
   
     <summary>Ответ</summary>
-    
        *  
   </details>  
 
@@ -5521,7 +5519,6 @@ P.S.S.
 
     ```
 
-
     </details>
 
   ---
@@ -5909,6 +5906,7 @@ P.S.S.
   ---
 
   </details> 
+
 
   <!-- Управление памятью -->
 - <details>
@@ -6304,66 +6302,63 @@ P.S.S.
     4. присваивается той же переменной е: тип всё еще определен, а значение нил
       
     - Ответ: true false false false
-
     </details>
-
-
-  ---
-
-- Вопрос №2: [ Что выведет код? (ошибка на миллион) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
-
-    <details>
-      <summary>Код</summary>
-
-    ```go
   
-    package main
-
-    import (
-      "fmt"
-    )
-
-    type myError struct {
-      code int
-    }
-
-    func (e myError) Error() string {
-      return fmt.Sprintf("code: %d", e.code)
-    }
-
-    func run() error {
-      var e *myError
-      if false {
-        e = &myError{code: 123}
-      }
-      return e
-    }
-
-    func main() {
-      err := run()
-      if err != nil {
-        fmt.Println("failed to run, error: ", err)
-      } else {
-        fmt.Println("success")
-      }
-    }
-
-    ```
-    </details>
-
-    <details>
-      <summary>Ответ</summary>
-
-    - Пояснение:
-    1. слева определн и тип и значение = нил, справа ни того, ни другого
-      
-    - Ответ: failed to run, error:  <nil>
-
   ---
 
-    </details>
+  - Вопрос №2: [ Что выведет код? (ошибка на миллион) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+  
+      <details>
+        <summary>Код</summary>
 
-  </details> 
+      ```go
+  
+      package main
+
+      import (
+        "fmt"
+      )
+
+      type myError struct {
+        code int
+      }
+
+      func (e myError) Error() string {
+        return fmt.Sprintf("code: %d", e.code)
+      }
+
+      func run() error {
+        var e *myError
+        if false {
+          e = &myError{code: 123}
+        }
+        return e
+      }
+
+      func main() {
+        err := run()
+        if err != nil {
+          fmt.Println("failed to run, error: ", err)
+        } else {
+          fmt.Println("success")
+        }
+      }
+
+      ```
+      </details>
+
+      <details>
+        <summary>Ответ</summary>
+
+      - Пояснение:
+      1. слева определн и тип и значение = нил, справа ни того, ни другого
+      
+      - Ответ: failed to run, error:  <nil>
+
+      </details>
+
+    </details>
+  
 
 <!-- JSON -->
 - <details>
@@ -7272,7 +7267,6 @@ P.S.S.
     - Ответ: [0 1 2 4] [0 1 2 4]
 
     </details>
-
 
   ---
 
