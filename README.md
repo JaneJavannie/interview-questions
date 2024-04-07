@@ -6004,8 +6004,6 @@ P.S.S.
 <details>
     <summary><b><i>Практические задачи Golang</i></b></summary>
 
----
-
 <!-- Каналы -->
 - <details>
     <summary><b><i>Каналы</i></b></summary>
@@ -6053,10 +6051,11 @@ P.S.S.
 
   - Вопрос №2: [ Что выведет код? (буферезированный канал) ] 
 
-  <details>
-      <summary>Код</summary>
+    <details>
+    <summary>Код</summary>
 
     ```go
+  
     package main
 
     import (
@@ -6087,11 +6086,12 @@ P.S.S.
       wg.Wait()
       close(c)
     }
+  
     ```
     </details>
 
     <details>
-      <summary>Ответ</summary>
+    <summary>Ответ</summary>
 
     - Пояснение:
     Создаем буф. канал, с буффером длины 3. В цикле запускаем 5 го рутин, в каждой пишем в канал. В бесконечном цикле читаем. 
@@ -6111,7 +6111,7 @@ P.S.S.
 
   - Вопрос №3: [ Что выведет код? (not buf chan) ] 
 
-  <details>
+    <details>
       <summary>Код</summary>
 
     ```go
@@ -6149,13 +6149,12 @@ P.S.S.
     deadlock
 
     </details>
-
-
+  
   ---
 
-- Вопрос №4: [ Что выведет код? () ] 
+  - Вопрос №4: [ Что выведет код? () ] 
 
-  <details>
+    <details>
       <summary>Код</summary>
 
     ```go
@@ -6194,55 +6193,53 @@ P.S.S.
     processed: cmd.1
     processed: cmd.2
 
-  </details>
-
-
-  ---
-
-- Вопрос №5: [ Что выведет код? () ] 
-
-  <details>
-      <summary>Код</summary>
-
-    ```go
-    package main
-
-    import (
-      "fmt"
-    )
-
-    func main() {
-      timeStart := time.Now()
-      _, _ = <-worker(), <-worker()
-      fmt.Println(int(time.Since(timeStart).Seconds()))
-    }
-
-    func worker() chan int {
-      ch := make(chan int)
-      go func() {
-        time.Sleep(3 * time.Second)
-        ch <- 1
-      }()
-      return ch
-    }
-
-    ```
     </details>
 
-    <details>
-      <summary>Ответ</summary>
+    ---
 
-    - Пояснение:
-    Запускаем worker() два раза, последовательно, отдает канал, читаем из канала дважды, последовательно. Каждая конструкция <-worker() займет 3 сек., в сумме 6
+  - Вопрос №5: [ Что выведет код? () ] 
+
+      <details>
+      <summary>Код</summary>
+
+      ```go
+      package main
+
+      import (
+        "fmt"
+      )
+
+      func main() {
+        timeStart := time.Now()
+        _, _ = <-worker(), <-worker()
+        fmt.Println(int(time.Since(timeStart).Seconds()))
+      }
+
+      func worker() chan int {
+        ch := make(chan int)
+        go func() {
+          time.Sleep(3 * time.Second)
+          ch <- 1
+        }()
+        return ch
+      }
+
+      ```
+      </details>
+
+      <details>
+        <summary>Ответ</summary>
+
+      - Пояснение:
+      Запускаем worker() два раза, последовательно, отдает канал, читаем из канала дважды, последовательно. Каждая конструкция <-worker() займет 3 сек., в сумме 6
       
-    - Ответ: 6
+      - Ответ: 6
 
+     </details>
 
-   </details>
-
-  ---
+    ---
     
-  </details> 
+    </details> 
 
 
 <!-- Интерфейсы -->
