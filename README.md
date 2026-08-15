@@ -5,7 +5,7 @@
 # Инструкции по применению
 **На данный момент репозиторий содержит:**  
 
-➡️ Теоретические вопросы: 400+ (распределены по файлам ниже)  
+➡️ Теоретические вопросы: 770+ (распределены по файлам ниже)  
 ➡️ Практические задачи: 33  
 
 ## Структура репозитория
@@ -16,7 +16,16 @@
 | [sql-postgres-questions.md](sql-postgres-questions.md) | Базы данных, SQL, PostgreSQL (внутреннее устройство, оптимизация, практика) | 79 |
 | [go-questions.md](go-questions.md) | Golang (Map/Swiss Tables, GC, планировщик, горутины, sync, дженерики, практика) | 168 |
 | [system-design-questions.md](system-design-questions.md) | System Design (CAP, шардирование, масштабирование, практические примеры систем) | 25 |
-| [redis-devops-questions.md](redis-devops-questions.md) | Redis (внутреннее устройство, репликация, кластер), Docker, Kubernetes | 30 |
+| [redis-devops-questions.md](redis-devops-questions.md) | Redis (внутреннее устройство, репликация, кластер), in-memory хранилища (сравнение), Docker, Kubernetes | 36 |
+| [go-testing-tooling.md](go-testing-tooling.md) | Go testing (table tests, benchmarks, fuzzing, mocking, integration testing) | 42 |
+| [message-brokers.md](message-brokers.md) | Kafka, RabbitMQ, NATS, SQS/SNS, EventBridge (архитектура, паттерны, сравнение, exactly-once) | 42 |
+| [api-design.md](api-design.md) | API Design (REST, GraphQL, gRPC, versioning, pagination, authentication) | 38 |
+| [linux-internals.md](linux-internals.md) | Linux internals (процессы, IPC, файловая система, cgroups, namespaces, eBPF) | 42 |
+| [db-operations.md](db-operations.md) | DB Operations (миграции, бэкапы, репликация, шардирование, VACUUM, сравнение БД, практики) | 43 |
+| [security.md](security.md) | Security (OWASP, аутентификация, авторизация, шифрование, secrets, network security) | 54 |
+| [observability.md](observability.md) | Observability (метрики, логи, трейсы, OpenTelemetry, Prometheus, SLO/SLI) | 32 |
+| [infrastructure-as-code.md](infrastructure-as-code.md) | IaC (Terraform, Ansible, Pulumi, GitOps, state management, best practices) | 30 |
+| [serverless.md](serverless.md) | Serverless (AWS Lambda, Step Functions, Serverless БД, patterns, cost optimization) | 42 |
 
 1️⃣ Настоятельно рекомендую, прежде чем открывать ответ на вопрос попробовать ответить на него самостоятельно.  
 2️⃣ Если ответить не получается, попробуйте выдумать ответ основываясь на уже имеющихся у вас знаниях.  
@@ -406,11 +415,13 @@ P.S.S.
 
     * Операция идемпотентна, если результат отправки множества запросов такой же, как и от одного.
 
-    * Безопасные методы идемпотентны и не изменяют состояние сервера. Методы GET, HEAD, PUT и DELETE — безопасные, следовательно, идемпотентные. 
-        Метод POST неиндемпотентный, следовательно, небезопасный. Получается, что в RESTful CRUD:
+    * **Безопасные (safe)** методы не изменяют состояние сервера: GET, HEAD, OPTIONS.
+      **Идемпотентные** методы дают одинаковый результат при повторном вызове: GET, HEAD, PUT, DELETE.
+      Безопасные методы всегда идемпотентны, но не все идемпотентные методы безопасны (PUT и DELETE изменяют состояние).
+      Метод POST — не идемпотентный и не безопасный. Получается, что в RESTful CRUD:
       - 1 неидемпотентный метод POST.
-      - 1 безопасный метод GET.
-      - 2 идемпотентных метода PUT и DELETE.
+      - 2 безопасных метода GET и HEAD.
+      - 2 идемпотентных, но не безопасных метода PUT и DELETE.
 
     </details>
 
@@ -643,7 +654,7 @@ P.S.S.
        * Транспортный уровень (как TCP и UDP):
          - SCTP (Stream Control Transmission Protocol) — протокол, предназначенный для передачи данных с поддержкой множественных потоков 
           и устойчивый к ошибкам.
-         - CCP (Datagram Congestion Control Protocol) — протокол, предназначенный для передачи потоковых медиа.
+          - DCCP (Datagram Congestion Control Protocol) — протокол, предназначенный для передачи потоковых медиа.
          + TLS протокол защиты транспортного уровня / SSL (устарел) - уровень защищенных сокетов, поверх протокола TCP обеспечивает 
           защищенное соединение (приватность, целостность данных, аутентификация), и уже с таким защищенным соединением работают 
            протоколы прикладного уровня, н-р HTTPS 
@@ -1524,7 +1535,7 @@ P.S.S.
       <summary>Binary Search</summary>
 
       - Binary Search (Бинарный поиск)  
-        Сложность: O(log n) в среднем и лучшем случае, где n - размер массива, O(1) в худшем случае (когда элемент не найден).
+        Сложность: O(log n) в среднем и худшем случае, где n - размер массива. O(1) — в лучшем случае (когда элемент найден в центре массива).
         In-place: Да.
         Стабильность: Нет.
 

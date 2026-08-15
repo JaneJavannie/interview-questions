@@ -18,6 +18,7 @@
 5. [Kubernetes — архитектура и компоненты](#5-kubernetes--архитектура-и-компоненты)
 6. [Kubernetes — эксплуатация и паттерны](#6-kubernetes--эксплуатация-и-паттерны)
 7. [Практические задачи (Senior)](#7-практические-задачи-senior)
+8. [Сравнение in-memory хранилищ: Redis vs Aerospike vs Memcached](#8-сравнение-in-memory-хранилищ-redis-vs-aerospike-vs-memcached)
 
 ---
 
@@ -76,7 +77,7 @@ Redis экспонирует абстрактные типы, но внутри 
 
 **Quicklist** — связный список ziplist'ов (компромисс между списком и массивом).
 
-**Skiplist** — вероятностная структура для有序 множеств. O(log n) поиск/вставка/удаление. Проще чем balanced BST, и range queries эффективны.
+**Skiplist** — вероятностная структура для упорядоченных множеств. O(log n) поиск/вставка/удаление. Проще чем balanced BST, и range queries эффективны.
 
 **intset** — отсортированный массив целых чисел. Бинарный поиск O(log n). Компактнее hashtable для маленьких int-множеств.
 
@@ -2344,3 +2345,175 @@ kubectl delete pods --field-selector status.phase=Failed  # удалить faile
 ```
 
 </details>
+
+---
+
+## 8. Сравнение in-memory хранилищ: Redis vs Aerospike vs Memcached
+
+<details>
+<summary><b>Развернуть раздел</b></summary>
+
+---
+
+  - Вопрос №1: [ Redis vs Memcached — принципиальная разница ]
+
+    <details>
+      <summary>Ответ</summary>
+
+    | Критерий | Redis | Memcached |
+    |----------|-------|-----------|
+    | **Тип данных** | String, List, Hash, Set, Sorted Set, Stream, HyperLogLog, Geo | Только String (key-value) |
+    | **Persistence** | RDB (snapshot) + AOF (write log) | Нет (только RAM) |
+    | **Replication** | Master-replica, Sentinel, Cluster | Нет (каждый node независим) |
+    | **Threading** | Single-threaded (Redis 6+ I/O threads) | Multi-threaded |
+    | **Max object size** | 512 МБ | 1 МБ (по умолчанию) |
+    | **Eviction** | LRU, LFU, TTL, noeviction | LRU, TTL |
+    | **Pub/Sub** | Да | Нет |
+    | **Lua scripting** | Да | Нет |
+    | **Cluster** | Redis Cluster (hash slots) | Client-side hashing (consistent hashing) |
+    | **Memory efficiency** | Выше (ziplist, intset) | Ниже для тех же данных (но меньше overhead) |
+
+    * **Memcached:** простейший key-value cache, multi-threaded, очень быстрый для простых
+      GET/SET. Нет persistence — чистый cache.
+    * **Redis:** data-structure server — списки, множества, сортированные множества, streams.
+      Persistence, replication, pub/sub, Lua.
+
+    </details>
+
+  ---
+
+  - Вопрос №2: [ Когда выбрать Redis, а когда Memcached? ]
+
+    <details>
+      <summary>Ответ</summary>
+
+    * **Выбирайте Redis, если:**
+      - Нужны структуры данных (list, set, sorted set, hash) — rate limiter, leaderboard,
+        queue (LPUSH/RPOP).
+      - Нужна persistence (cache warm restart, session store).
+      - Нужна репликация (HA, read scaling).
+      - Нужен pub/sub или streams.
+      - Нужен Lua scripting (atomic complex operations).
+      - TTL с миллисекундной точностью.
+
+    * **Выбирайте Memcached, если:**
+      - Простой key-value cache (HTML fragments, SQL results).
+      - Multi-threaded важно (Redis single-threaded — 1 core, Memcached — все cores).
+      - Много маленьких объектов — Memcached эффективнее по памяти (меньше metadata overhead).
+      - Cache-only — потеря данных при рестарте допустима.
+
+    * **На практике:** Redis стал де-факто стандартом — Memcached выбирают только для
+      простейшего caching слоя с максимальным multi-core использованием.
+
+    </details>
+
+  ---
+
+  - Вопрос №3: [ Redis vs Aerospike — когда in-memory не хватает ]
+
+    <details>
+      <summary>Ответ</summary>
+
+    | Критерий | Redis | Aerospike |
+    |----------|-------|-----------|
+    | **Архитектура** | In-memory (опционально disk persistence) | Hybrid: RAM + SSD/NVMe (primary storage) |
+    | **Объём данных** | RAM-limited (десятки ГБ на node) | TB на node (данные на SSD) |
+    | **Latency** | <1 мс (RAM) | ~1–5 мс (SSD), <1 мс (RAM namespace) |
+    | **Throughput** | ~100K–200K ops/сек (single-threaded) | ~200K–1M ops/сек (multi-threaded) |
+    | **Threading** | Single-threaded (Redis 6+ I/O threads) | Multi-threaded |
+    | **Replication** | Async (по умолчанию), sync (WAIT) | Sync / async (configurable per namespace) |
+    | **Sharding** | Redis Cluster (16384 hash slots) | Auto-clustering (consistent hashing + paxos) |
+    | **Data model** | Key-value, data structures | Key-value (bins), secondary indexes, aggregation |
+    | **Indexes** | Нет (только key lookup) | Primary + secondary indexes (sindex) |
+    | **Strong consistency** | Нет (eventual consistency) | Да (strongly consistent mode, CP) |
+    | **Cross-DC** | Redis CRDTs (Active-Active) | XDR (Cross-Datacenter Replication) |
+    | **License** | RSALv2 / SSPL (Valkey — BSD) | AGPL / Enterprise |
+
+    * **Aerospike** создан для **больших объёмов данных на SSD** — данные хранятся на диске,
+      RAM используется только для primary index. Это позволяет хранить TB на один node при
+      sub-millisecond latency.
+    * **Redis** — in-memory: все данные в RAM. Для больших объёмов нужен cluster с множеством
+      nodes, что дорого (RAM дороже SSD).
+
+    </details>
+
+  ---
+
+  - Вопрос №4: [ Когда выбрать Aerospike вместо Redis? ]
+
+    <details>
+      <summary>Ответ</summary>
+
+    * **Выбирайте Aerospike, если:**
+      - **Объём данных > RAM** — terabytes данных, которые не влезают в RAM.
+      - **Cost efficiency** — SSD дешевле RAM (Aerospike на 1 TB = 1 сервер, Redis = много
+        серверов с RAM).
+      - **High write throughput** — multi-threaded, линейное масштабирование.
+      - **Strong consistency** — Aerospike поддерживает CP mode (linearizable reads/writes).
+      - **Secondary indexes** — запросы по не-key полям (Redis — только scan или app-level index).
+      - **Cross-DC replication** — XDR для active-active multi-region.
+      - **Session store для 100M+ users** — большой объём, low latency, HA.
+
+    * **Выбирайте Redis, если:**
+      - **Data structures** — sorted sets (leaderboard), lists (queue), streams (event log),
+        hyperloglog (cardinality).
+      - **Sub-millisecond latency** — всё в RAM.
+      - **Ecosystem** — огромная экосистема, библиотеки на всех языках, Redis Stack (Search,
+        JSON, TimeSeries, Bloom).
+      - **Small-medium dataset** — до десятков ГБ на node.
+      - **Pub/Sub** — real-time notifications.
+      - **Lua scripting** — atomic complex operations.
+
+    </details>
+
+  ---
+
+  - Вопрос №5: [ Redis vs Aerospike: стоимость владения (TCO) ]
+
+    <details>
+      <summary>Ответ</summary>
+
+    * **Сценарий:** 1 TB hot data, ~500K ops/сек, 99-й перцентиль < 5 мс.
+
+    | | Redis Cluster | Aerospike |
+    |--|---------------|-----------|
+    | **Nodes** | ~25–30 nodes (по 40–48 ГБ RAM каждая) | ~5–7 nodes (по 2 TB SSD + 64 ГБ RAM) |
+    | **Hardware cost** | ~25 × high-RAM servers (дорого) | ~5 × standard servers (дешевле) |
+    | **Network** | 25 nodes → больше cross-node traffic (resharding) | 5 nodes → меньше overhead |
+    | **Operations** | 25 nodes → больше patching, monitoring | 5 nodes → проще управлять |
+    | **License** | RSALv2 / SSPL (Valkey — BSD) | Open source (AGPL) / Enterprise (paid) |
+
+    * **Вывод:** для больших объёмов данных (>100 ГБ) Aerospike значительно дешевле по hardware.
+      Для малых объёмов (<50 ГБ) Redis проще и дешевле (free license, нет enterprise license).
+
+    </details>
+
+  ---
+
+  - Вопрос №6: [ Практический сценарий: выбор хранилища для разных задач ]
+
+    <details>
+      <summary>Ответ</summary>
+
+    | Задача | Хранилище | Почему |
+    |--------|-----------|-------|
+    | Session store (10M users, <10 ГБ) | Redis | In-memory, low latency, TTL, simple |
+    | Session store (200M users, 500 ГБ) | Aerospike | TB на SSD, low latency, cheaper than RAM |
+    | Leaderboard / real-time ranking | Redis | Sorted Set (ZADD/ZRANGE) — built-in |
+    | Rate limiter | Redis | INCR + EXPIRE, sliding window via Lua |
+    | Cache layer (SQL results) | Redis / Memcached | Simple key-value, TTL |
+    | User profile store (1 TB, indexed) | Aerospike | Secondary indexes, SSD-backed |
+    | Real-time bidding (RTB) | Aerospike | <1 мс, high write throughput, strong consistency |
+    | Pub/Sub notifications | Redis | Built-in pub/sub + streams |
+    | Job queue (delayed tasks) | Redis | List + ZSET (delayed queue) |
+    | Fraud detection (large graph) | Aerospike | Large dataset, sindex, UDF (Lua) |
+    | Geo-fencing / geospatial | Redis | Geo commands (GEOADD, GEORADIUS) |
+    | Time-series (metrics, IoT) | Redis (TimeSeries module) / Aerospike | Redis TS — purpose-built; Aerospike — large volume |
+
+    </details>
+
+  ---
+
+</details>
+
+---
