@@ -967,4 +967,308 @@
 
 ---
 
+  - Вопрос №23: [ Что такое паттерн BFF (Backend for Frontend)? Когда его применять? ] ![Static Badge](https://img.shields.io/badge/Senior-red)
+
+    <details>
+      <summary>Ответ</summary>
+
+    * **BFF (Backend for Frontend)** — паттерн, при котором создаётся отдельный бэкенд-сервис для каждого
+      типа клиента (web, mobile, desktop, IoT). Каждый BFF оптимизирован под конкретные потребности клиента.
+
+    * **Проблема, которую решает:**
+      - Generic API пытается удовлетворить все клиенты → компромиссы в дизайне;
+      - Mobile нужен компактный ответ (экономия трафика), Web — полный;
+      - Разная логика агрегации данных для разных UI;
+      - Разные требования к безопасности, кэшированию, rate limiting.
+
+    * **Архитектура:**
+      ```
+      Mobile App → Mobile BFF → [Core Services]
+      Web App    → Web BFF    → [Core Services]
+      Admin UI   → Admin BFF  → [Core Services]
+      ```
+
+    * **Что делает BFF:**
+      - **Aggregation:** собирает данные из нескольких сервисов в один ответ (eliminates chatty calls);
+      - **Transformation:** адаптирует формат данных под конкретный UI;
+      - **Protocol adaptation:** gRPC internally → GraphQL/REST externally;
+      - **Optimization:** кэширование, compression, field filtering для mobile;
+      - **Security:** different auth policies per client type.
+
+    * **Когда использовать:**
+      - Несколько клиентов с разными потребностями (mobile vs web vs desktop);
+      - Нужна агрегация данных из нескольких сервисов;
+      - Разные требования к безопасности/авторизации;
+      - Оптимизация под конкретный UI (mobile = minimal payload).
+
+    * **Когда НЕ использовать:**
+      - Один клиент (over-engineering);
+      - Простые CRUD-приложения;
+      - Команда слишком маленькая (дополнительная инфраструктура).
+
+    * **Подводные камни:**
+
+      | Проблема | Решение |
+      |----------|---------|
+      | **Code duplication** (логика дублируется в разных BFF) | Shared libraries для business logic; BFF = thin aggregation layer |
+      | **Maintenance overhead** (N клиентов = N BFF) | Автоматическая генерация API (GraphQL codegen); shared proto/IDL |
+      | **Latency** (extra hop через BFF) | BFF должен быть lightweight; colocate с API Gateway |
+      | **Consistency** (разные BFF возвращают разные данные) | Clear ownership: каждый BFF отвечает за свой use case; contracts testing |
+      | **Deployment complexity** (N сервисов вместо 1) | GitOps; shared infrastructure; auto-scaling per BFF |
+
+    * **Пример (Go):**
+      ```go
+      // Mobile BFF: агрегирует данные из UserService и OrderService
+      func (bff *MobileBFF) GetUserProfile(ctx context.Context, userID string) (*MobileProfile, error) {
+          // Parallel calls to core services
+          g, ctx := errgroup.WithContext(ctx)
+          
+          var user *User
+          var orders []Order
+          
+          g.Go(func() error {
+              var err error
+              user, err = bff.userClient.GetUser(ctx, userID)
+              return err
+          })
+          
+          g.Go(func() error {
+              var err error
+              orders, err = bff.orderClient.GetRecentOrders(ctx, userID, 5) // limit for mobile
+              return err
+          })
+          
+          if err := g.Wait(); err != nil {
+              return nil, err
+          }
+          
+          // Transform to mobile-specific response
+          return &MobileProfile{
+              Name:        user.Name,
+              Avatar:      user.AvatarURL,
+              RecentOrders: transformOrders(orders), // compact format
+          }, nil
+      }
+      ```
+
+    </details>
+
+---
+
+  - Вопрос №24: [ Что такое Sidecar паттерн? Какие проблемы он решает? ] ![Static Badge](https://img.shields.io/badge/Senior-red)
+
+    <details>
+      <summary>Ответ</summary>
+
+    * **Sidecar** — паттерн, при котором дополнительный компонент (sidecar container) развёртывается
+      вместе с основным приложением в одном Pod (Kubernetes) или на одном хосте. Sidecar расширяет
+      функциональность приложения без изменения его кода.
+
+    * **Примеры использования:**
+
+    * **1. Service Mesh Proxy (Envoy/Linkerd):**
+      - Sidecar перехватывает весь сетевой трафик приложения;
+      - Реализует: mTLS, retries, circuit breaking, tracing, metrics;
+      - Приложение не знает о mesh (transparent proxy);
+      - Пример: Istio injects Envoy sidecar автоматически.
+
+    * **2. Logging/Fluentd sidecar:**
+      - Приложение пишет логи в file/stdout;
+      - Sidecar читает логи → отправляет в centralized system (Elasticsearch, CloudWatch);
+      - Разделение ответственности: app = business logic, sidecar = log shipping.
+
+    * **3. Config reloader:**
+      - Sidecar watches ConfigMap/Secret changes;
+      - При изменении → reloads app config (SIGHUP, API call);
+      - App не знает о Kubernetes ConfigMap.
+
+    * **4. SSL/TLS termination:**
+      - Sidecar (nginx/envoy) terminates TLS;
+      - App receives unencrypted traffic (localhost only);
+      - Centralized certificate management.
+
+    * **5. Monitoring/Exporter:**
+      - Sidecar collects metrics from app (JMX, statsd);
+      - Exposes in Prometheus format;
+      - App doesn't need Prometheus client library.
+
+    * **Архитектура (Kubernetes Pod):**
+      ```yaml
+      apiVersion: v1
+      kind: Pod
+      metadata:
+        name: app-with-sidecar
+      spec:
+        containers:
+        - name: main-app
+          image: myapp:1.0
+          ports:
+          - containerPort: 8080
+        
+        - name: envoy-sidecar
+          image: envoyproxy/envoy:v1.28
+          ports:
+          - containerPort: 9901  # admin
+          - containerPort: 15001 # proxy
+          volumeMounts:
+          - name: envoy-config
+            mountPath: /etc/envoy
+        
+        volumes:
+        - name: envoy-config
+          configMap:
+            name: envoy-config
+      ```
+
+    * **Преимущества:**
+      - **Separation of concerns:** infrastructure logic вынесена из приложения;
+      - **Reusability:** один sidecar используется многими приложениями;
+      - **Independent updates:** sidecar можно обновлять без изменения приложения;
+      - **Language-agnostic:** sidecar работает с любым языком (polyglot);
+      - **No code changes:** приложение не модифицируется.
+
+    * **Подводные камни:**
+
+      | Проблема | Решение |
+      |----------|---------|
+      | **Resource overhead** (каждый Pod = N контейнеров) | Resource limits (CPU/memory); shared process namespace (optional) |
+      | **Networking complexity** (localhost communication) | Use `127.0.0.1` between containers; document ports clearly |
+      | **Lifecycle management** (sidecar crash vs app crash) | `restartPolicy: Always`; health checks for both containers |
+      | **Log aggregation** (logs from multiple containers) | Separate log paths; sidecar collects all (fluentd tail plugin) |
+      | **Debugging difficulty** (multi-container Pod) | `kubectl logs -c <container>`; ephemeral containers for debugging |
+      | **Versioning** (sidecar version != app version) | Automate sidecar injection (Istio, Linkerd); GitOps |
+      | **Cold start latency** (sidecar init before app) | Init containers for setup; readiness probes |
+
+    * **Ambassador pattern (вариация):**
+      - Sidecar помогает основному контейнеру взаимодействовать с внешним миром;
+      - Пример: proxy для доступа к external service (authentication, retry, routing);
+      - Отличие: sidecar = расширяет, ambassador = помогает общаться с external world.
+
+    </details>
+
+---
+
+  - Вопрос №25: [ Что такое Service Discovery? Какие бывают подходы? ] ![Static Badge](https://img.shields.io/badge/Senior-red)
+
+    <details>
+      <summary>Ответ</summary>
+
+    * **Service Discovery** — механизм автоматического обнаружения сервисов в распределённой системе.
+      В динамической среде (Kubernetes, cloud) IP-адреса меняются (scaling, failures, deployments),
+      поэтому hardcoded endpoints не работают.
+
+    * **Компоненты Service Discovery:**
+      1. **Service Registry** — база данных сервисов (IP, port, metadata, health status);
+      2. **Registration** — сервис регистрируется при старте (self-registration или sidecar);
+      3. **Discovery** — сервис находит другие сервисы через registry;
+      4. **Health checking** — periodic checks → удаление unhealthy instances.
+
+    * **Подходы:**
+
+    * **1. Client-side discovery:**
+      - Клиент сам запрашивает service registry → получает список instances → выбирает (load balancing);
+      - Пример: Netflix Eureka + Ribbon;
+      - Плюс: клиент контролирует load balancing logic;
+      - Минус: клиент должен знать о discovery; extra network hop.
+      ```
+      Client → Service Registry → [List of instances]
+      Client → Load balancer → Instance 1/2/3
+      ```
+
+    * **2. Server-side discovery:**
+      - Клиент делает запрос к load balancer → LB сам запрашивает registry → routing;
+      - Пример: AWS ELB + Route 53, Kubernetes Service;
+      - Плюс: клиент не знает о discovery (transparent);
+      - Минус: LB = SPOF (решается clustering); extra hop.
+      ```
+      Client → Load Balancer → Service Registry → Instance 1/2/3
+      ```
+
+    * **3. DNS-based discovery:**
+      - Сервисы регистрируются через DNS (A/SRV records);
+      - Клиент использует DNS resolution;
+      - Пример: Kubernetes DNS (`service.namespace.svc.cluster.local`), Consul DNS interface;
+      - Плюс: language-agnostic (все знают DNS);
+      - Минус: DNS caching → slow failover; TTL trade-offs.
+
+    * **Service Registry инструменты:**
+
+      | Инструмент | Тип | Особенности |
+      |------------|-----|-------------|
+      | **Consul** | External | Health checking, KV store, DNS interface, multi-DC |
+      | **etcd** | External | Strong consistency (Raft), used by Kubernetes |
+      | **ZooKeeper** | External | Strong consistency, widely used (Hadoop, Kafka) |
+      | **Eureka** | External | AWS-style, eventual consistency (Netflix OSS) |
+      | **Kubernetes DNS** | Built-in | Automatic (Pod/Service → DNS); no manual registration |
+      | **Nacos** | External | Dynamic DNS, config management (Alibaba) |
+
+    * **Kubernetes Service Discovery:**
+      ```yaml
+      # Kubernetes автоматически создаёт DNS-запись
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: user-service
+      spec:
+        selector:
+          app: user-service
+        ports:
+        - port: 80
+          targetPort: 8080
+      
+      # Другие Pod'ы могут обращаться:
+      # http://user-service.default.svc.cluster.local
+      # или просто: http://user-service (в том же namespace)
+      ```
+
+    * **Health checking:**
+      - **Passive:** LB отслеживает errors/timeouts → removes instance;
+      - **Active:** registry periodically pings `/health` → marks unhealthy;
+      - **TTL-based:** service renewes lease (etcd/Consul); no renew → expired.
+
+    * **Подводные камни:**
+
+      | Проблема | Решение |
+      |----------|---------|
+      | **Stale registrations** (сервис упал, но запись осталась) | Active health checks; TTL-based leases; automatic deregistration |
+      | **DNS caching** (долгое переключение при failover) | Low TTL; client-side caching with refresh; service mesh |
+      | **Registry SPOF** | Cluster registry (etcd: Raft quorum; Consul: gossip + Raft); multi-region replication |
+      | **Network partition** (registry недоступен) | Client-side cache (last known good instances); circuit breaker |
+      | **Registration storm** (1000 instances регистрируются одновременно при деплое) | Batch registration; rate limiting; gradual rollout |
+      | **Consistency vs availability** | Strong consistency (etcd/Raft) для критичных сервисов; eventual (Eureka) для scalability |
+      | **Multi-region discovery** | Consul multi-DC; Kubernetes multi-cluster (Federation); global load balancer |
+      | **Service mesh integration** | Istio/Linkerd automatic service discovery; no manual registration |
+
+    * **Go пример (Consul client):**
+      ```go
+      import "github.com/hashicorp/consul/api"
+
+      // Регистрация сервиса
+      func RegisterService(consulClient *api.Client, serviceID, serviceName, address string, port int) error {
+          registration := &api.AgentServiceRegistration{
+              ID:      serviceID,
+              Name:    serviceName,
+              Address: address,
+              Port:    port,
+              Check: &api.AgentServiceCheck{
+                  HTTP:                           fmt.Sprintf("http://%s:%d/health", address, port),
+                  Interval:                       "10s",
+                  Timeout:                        "2s",
+                  DeregisterCriticalServiceAfter: "1m",
+              },
+          }
+          return consulClient.Agent().ServiceRegister(registration)
+      }
+
+      // Discovery: найти все instances сервиса
+      func DiscoverService(consulClient *api.Client, serviceName string) ([]*api.ServiceEntry, error) {
+          entries, _, err := consulClient.Health().Service(serviceName, "", true, nil)
+          return entries, err
+      }
+      ```
+
+    </details>
+
+---
+
   </details>

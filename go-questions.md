@@ -5125,3 +5125,783 @@
 
 ---
 
+<!-- Concurrent Patterns -->
+- <details>
+    <summary><b><i>Конкурентные паттерны (практика Senior)</i></b></summary>
+
+---
+
+  - Вопрос №1: [ Реализуй Worker Pool с graceful shutdown ] ![Static Badge](https://img.shields.io/badge/Holy_Moly-red)
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    type Job struct {
+        ID   int
+        Data interface{}
+    }
+
+    type Result struct {
+        JobID int
+        Err   error
+    }
+
+    func WorkerPool(ctx context.Context, jobs <-chan Job, results chan<- Result, numWorkers int) {
+        var wg sync.WaitGroup
+
+        for i := 0; i < numWorkers; i++ {
+            wg.Add(1)
+            go func(workerID int) {
+                defer wg.Done()
+                for {
+                    select {
+                    case <-ctx.Done():
+                        return
+                    case job, ok := <-jobs:
+                        if !ok {
+                            return // channel closed
+                        }
+                        err := processJob(ctx, job)
+                        select {
+                        case results <- Result{JobID: job.ID, Err: err}:
+                        case <-ctx.Done():
+                            return
+                        }
+                    }
+                }
+            }(i)
+        }
+
+        // Закрыть results когда все воркеры завершились
+        go func() {
+            wg.Wait()
+            close(results)
+        }()
+    }
+
+    func processJob(ctx context.Context, job Job) error {
+        // Имитация работы с проверкой контекста
+        select {
+        case <-time.After(100 * time.Millisecond):
+            return nil
+        case <-ctx.Done():
+            return ctx.Err()
+        }
+    }
+
+    // Использование
+    func main() {
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        jobs := make(chan Job, 100)
+        results := make(chan Result, 100)
+
+        go WorkerPool(ctx, jobs, results, 4)
+
+        // Отправка задач
+        go func() {
+            for i := 0; i < 1000; i++ {
+                select {
+                case jobs <- Job{ID: i}:
+                case <-ctx.Done():
+                    return
+                }
+            }
+            close(jobs)
+        }()
+
+        // Сбор результатов
+        for r := range results {
+            if r.Err != nil {
+                log.Printf("job %d failed: %v", r.JobID, r.Err)
+            }
+        }
+    }
+    ```
+
+    **Ключевые моменты:**
+    - `context.Context` для cancellation;
+    - `sync.WaitGroup` для отслеживания воркеров;
+    - `close(results)` после завершения всех воркеров;
+    - `select` на каждом channel-операции — чтобы не зависнуть при cancel;
+    - Buffered channels для сглаживания burst'ов.
+
+    </details>
+
+---
+
+  - Вопрос №2: [ Реализуй Pipeline (fan-out / fan-in) ] ![Static Badge](https://img.shields.io/badge/Holy_Moly-red)
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    // Pipeline: generate → square → filter (>100) → collect
+
+    // Stage 1: генерация чисел
+    func generate(ctx context.Context, nums ...int) <-chan int {
+        out := make(chan int)
+        go func() {
+            defer close(out)
+            for _, n := range nums {
+                select {
+                case out <- n:
+                case <-ctx.Done():
+                    return
+                }
+            }
+        }()
+        return out
+    }
+
+    // Stage 2: возведение в квадрат (fan-out на N воркеров)
+    func square(ctx context.Context, in <-chan int, n int) <-chan int {
+        out := make(chan int)
+        var wg sync.WaitGroup
+
+        for i := 0; i < n; i++ {
+            wg.Add(1)
+            go func() {
+                defer wg.Done()
+                for v := range in {
+                    select {
+                    case out <- v * v:
+                    case <-ctx.Done():
+                        return
+                    }
+                }
+            }()
+        }
+
+        go func() {
+            wg.Wait()
+            close(out)
+        }()
+        return out
+    }
+
+    // Stage 3: фильтрация
+    func filter(ctx context.Context, in <-chan int, min int) <-chan int {
+        out := make(chan int)
+        go func() {
+            defer close(out)
+            for v := range in {
+                if v >= min {
+                    select {
+                    case out <- v:
+                    case <-ctx.Done():
+                        return
+                    }
+                }
+            }
+        }()
+        return out
+    }
+
+    // Использование
+    func main() {
+        ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+        defer cancel()
+
+        // Pipeline: generate → square (4 workers) → filter(>100)
+        ch := generate(ctx, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+        ch = square(ctx, ch, 4)    // fan-out: 4 горутины
+        ch = filter(ctx, ch, 50)   // только квадраты >= 50
+
+        for v := range ch {
+            fmt.Println(v) // 64, 81, 100, 121, 144
+        }
+    }
+    ```
+
+    **Ключевые принципы pipeline:**
+    - Каждый stage — функция, принимающая `<-chan` и возвращающая `<-chan`;
+    - Stage закрывает свой output channel когда input закрыт;
+    - `ctx.Done()` проверяется на каждой операции;
+    - Fan-out: несколько горутин читают один channel → параллелизм stage;
+    - Fan-in: несколько channels → один (через `sync.WaitGroup` + `close`).
+
+    </details>
+
+---
+
+  - Вопрос №3: [ Реализуй rate limiter (token bucket) на каналах ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    // Token bucket rate limiter на time.Ticker
+    type RateLimiter struct {
+        ticker *time.Ticker
+        tokens chan struct{}
+        stop   chan struct{}
+    }
+
+    func NewRateLimiter(rps int, burst int) *RateLimiter {
+        rl := &RateLimiter{
+            ticker: time.NewTicker(time.Second / time.Duration(rps)),
+            tokens: make(chan struct{}, burst),
+            stop:   make(chan struct{}),
+        }
+
+        // Предзаполнить burst токенов
+        for i := 0; i < burst; i++ {
+            rl.tokens <- struct{}{}
+        }
+
+        go func() {
+            for {
+                select {
+                case <-rl.ticker.C:
+                    select {
+                    case rl.tokens <- struct{}{}: // добавить токен (неблокирующе)
+                    default:                       // bucket полон
+                    }
+                case <-rl.stop:
+                    rl.ticker.Stop()
+                    return
+                }
+            }
+        }()
+
+        return rl
+    }
+
+    // Wait блокирует пока не будет доступен токен
+    func (rl *RateLimiter) Wait(ctx context.Context) error {
+        select {
+        case <-rl.tokens:
+            return nil
+        case <-ctx.Done():
+            return ctx.Err()
+        }
+    }
+
+    func (rl *RateLimiter) Stop() {
+        close(rl.stop)
+    }
+
+    // Использование
+    func main() {
+        rl := NewRateLimiter(10, 5) // 10 RPS, burst 5
+        defer rl.Stop()
+
+        ctx := context.Background()
+        for i := 0; i < 100; i++ {
+            if err := rl.Wait(ctx); err != nil {
+                log.Fatal(err)
+            }
+            go func(id int) {
+                fmt.Printf("request %d at %s\n", id, time.Now().Format("15:04:05.000"))
+            }(i)
+        }
+    }
+    ```
+
+    **Альтернатива — golang.org/x/time/rate (production-ready):**
+    ```go
+    import "golang.org/x/time/rate"
+
+    limiter := rate.NewLimiter(rate.Limit(10), 5) // 10/s, burst 5
+    if err := limiter.Wait(ctx); err != nil {
+        // rate limit exceeded or context cancelled
+    }
+    ```
+
+    </details>
+
+---
+
+  - Вопрос №4: [ Реализуй timeout для HTTP-запроса с context ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    func FetchWithTimeout(ctx context.Context, url string, timeout time.Duration) ([]byte, error) {
+        // Дочерний контекст с timeout
+        ctx, cancel := context.WithTimeout(ctx, timeout)
+        defer cancel()
+
+        req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+        if err != nil {
+            return nil, fmt.Errorf("create request: %w", err)
+        }
+
+        resp, err := http.DefaultClient.Do(req)
+        if err != nil {
+            if errors.Is(err, context.DeadlineExceeded) {
+                return nil, fmt.Errorf("timeout after %s: %w", timeout, err)
+            }
+            return nil, fmt.Errorf("do request: %w", err)
+        }
+        defer resp.Body.Close()
+
+        if resp.StatusCode != http.StatusOK {
+            return nil, fmt.Errorf("unexpected status: %d", resp.StatusCode)
+        }
+
+        // Ограничить размер ответа
+        body, err := io.ReadAll(io.LimitReader(resp.Body, 10*1024*1024)) // 10MB max
+        if err != nil {
+            return nil, fmt.Errorf("read body: %w", err)
+        }
+
+        return body, nil
+    }
+
+    // Использование с retry и backoff
+    func FetchWithRetry(ctx context.Context, url string, maxRetries int) ([]byte, error) {
+        var lastErr error
+
+        for attempt := 0; attempt < maxRetries; attempt++ {
+            if attempt > 0 {
+                // Exponential backoff + jitter
+                backoff := time.Duration(1<<attempt) * time.Second
+                jitter := time.Duration(rand.Intn(500)) * time.Millisecond
+                select {
+                case <-time.After(backoff + jitter):
+                case <-ctx.Done():
+                    return nil, ctx.Err()
+                }
+            }
+
+            data, err := FetchWithTimeout(ctx, url, 5*time.Second)
+            if err == nil {
+                return data, nil
+            }
+
+            lastErr = err
+            if errors.Is(err, context.DeadlineExceeded) || errors.Is(err, context.Canceled) {
+                return nil, err // не retry
+            }
+        }
+        return nil, fmt.Errorf("after %d retries: %w", maxRetries, lastErr)
+    }
+    ```
+
+    </details>
+
+---
+
+  - Вопрос №5: [ Реализуй circuit breaker на channels/atomic ] ![Static Badge](https://img.shields.io/badge/Holy_Moly-red)
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    type State int32
+
+    const (
+        StateClosed   State = 0
+        StateOpen     State = 1
+        StateHalfOpen State = 2
+    )
+
+    type CircuitBreaker struct {
+        state           atomic.Int32
+        failureCount    atomic.Int64
+        successCount    atomic.Int64
+        lastFailureTime atomic.Int64
+
+        maxFailures   int64
+        timeout       time.Duration
+        halfOpenMax   int64
+    }
+
+    func NewCircuitBreaker(maxFailures int, timeout time.Duration) *CircuitBreaker {
+        cb := &CircuitBreaker{
+            maxFailures: int64(maxFailures),
+            timeout:     timeout,
+            halfOpenMax: 3,
+        }
+        cb.state.Store(int32(StateClosed))
+        return cb
+    }
+
+    func (cb *CircuitBreaker) Execute(fn func() error) error {
+        if !cb.allowRequest() {
+            return ErrCircuitOpen
+        }
+
+        err := fn()
+
+        if err != nil {
+            cb.onFailure()
+            return err
+        }
+
+        cb.onSuccess()
+        return nil
+    }
+
+    func (cb *CircuitBreaker) allowRequest() bool {
+        state := State(cb.state.Load())
+
+        switch state {
+        case StateClosed:
+            return true
+        case StateOpen:
+            // Проверить, не прошёл ли timeout
+            lastFail := time.Unix(0, cb.lastFailureTime.Load())
+            if time.Since(lastFail) > cb.timeout {
+                // Transition to half-open
+                cb.state.CompareAndSwap(int32(StateOpen), int32(StateHalfOpen))
+                cb.successCount.Store(0)
+                return true
+            }
+            return false
+        case StateHalfOpen:
+            // Пропускаем ограниченное число запросов
+            return cb.successCount.Load() < cb.halfOpenMax
+        }
+        return false
+    }
+
+    func (cb *CircuitBreaker) onFailure() {
+        state := State(cb.state.Load())
+        failures := cb.failureCount.Add(1)
+        cb.lastFailureTime.Store(time.Now().UnixNano())
+
+        switch state {
+        case StateClosed:
+            if failures >= cb.maxFailures {
+                cb.state.Store(int32(StateOpen))
+            }
+        case StateHalfOpen:
+            cb.state.Store(int32(StateOpen))
+            cb.failureCount.Store(0)
+        }
+    }
+
+    func (cb *CircuitBreaker) onSuccess() {
+        state := State(cb.state.Load())
+        cb.failureCount.Store(0)
+
+        if state == StateHalfOpen {
+            successes := cb.successCount.Add(1)
+            if successes >= cb.halfOpenMax {
+                cb.state.Store(int32(StateClosed))
+            }
+        }
+    }
+
+    var ErrCircuitOpen = errors.New("circuit breaker is open")
+    ```
+
+    **Production-альтернатива:** `github.com/sony/gobreaker` — готовая реализация.
+
+    </details>
+
+---
+
+  - Вопрос №6: [ Реализуй bounded concurrency (semaphore pattern) ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    // Вариант 1: buffered channel как semaphore
+    func ProcessConcurrently(ctx context.Context, items []Item, maxConcurrency int) error {
+        sem := make(chan struct{}, maxConcurrency)
+        var wg sync.WaitGroup
+        errCh := make(chan error, len(items))
+
+        for _, item := range items {
+            wg.Add(1)
+            go func(it Item) {
+                defer wg.Done()
+
+                // Acquire semaphore
+                select {
+                case sem <- struct{}{}:
+                    defer func() { <-sem }()
+                case <-ctx.Done():
+                    errCh <- ctx.Err()
+                    return
+                }
+
+                if err := process(ctx, it); err != nil {
+                    errCh <- err
+                }
+            }(item)
+        }
+
+        wg.Wait()
+        close(errCh)
+
+        var firstErr error
+        for err := range errCh {
+            if firstErr == nil {
+                firstErr = err
+            }
+        }
+        return firstErr
+    }
+
+    // Вариант 2: golang.org/x/sync/errgroup (рекомендуется)
+    func ProcessWithErrGroup(ctx context.Context, items []Item, maxConcurrency int) error {
+        g, ctx := errgroup.WithContext(ctx)
+        g.SetLimit(maxConcurrency) // Go 1.20+ / errgroup
+
+        for _, item := range items {
+            item := item
+            g.Go(func() error {
+                return process(ctx, item)
+            })
+        }
+        return g.Wait() // возвращает первую ошибку, отменяет ctx
+    }
+
+    // Вариант 3: sync.WaitGroup + channel для раннего выхода
+    func ProcessWithEarlyExit(ctx context.Context, items []Item, maxConc int) error {
+        ctx, cancel := context.WithCancel(ctx)
+        defer cancel()
+
+        sem := make(chan struct{}, maxConc)
+        var wg sync.WaitGroup
+
+        for _, item := range items {
+            select {
+            case sem <- struct{}{}:
+            case <-ctx.Done():
+                wg.Wait()
+                return ctx.Err()
+            }
+
+            wg.Add(1)
+            go func(it Item) {
+                defer wg.Done()
+                defer func() { <-sem }()
+
+                if err := process(ctx, it); err != nil {
+                    cancel() // отменить остальные
+                }
+            }(item)
+        }
+
+        wg.Wait()
+        return ctx.Err()
+    }
+    ```
+
+    </details>
+
+---
+
+  - Вопрос №7: [ Реализуй in-memory pub/sub ] ![Static Badge](https://img.shields.io/badge/Holy_Moly-red)
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    type PubSub struct {
+        mu          sync.RWMutex
+        subscribers map[string][]chan Message
+    }
+
+    type Message struct {
+        Topic string
+        Data  interface{}
+    }
+
+    func NewPubSub() *PubSub {
+        return &PubSub{
+            subscribers: make(map[string][]chan Message),
+        }
+    }
+
+    func (ps *PubSub) Subscribe(topic string, bufSize int) <-chan Message {
+        ps.mu.Lock()
+        defer ps.mu.Unlock()
+
+        ch := make(chan Message, bufSize)
+        ps.subscribers[topic] = append(ps.subscribers[topic], ch)
+        return ch
+    }
+
+    func (ps *PubSub) Unsubscribe(topic string, ch <-chan Message) {
+        ps.mu.Lock()
+        defer ps.mu.Unlock()
+
+        subs := ps.subscribers[topic]
+        for i, sub := range subs {
+            if sub == ch {
+                ps.subscribers[topic] = append(subs[:i], subs[i+1:]...)
+                close(sub)
+                break
+            }
+        }
+    }
+
+    func (ps *PubSub) Publish(topic string, data interface{}) {
+        ps.mu.RLock()
+        subs := make([]chan Message, len(ps.subscribers[topic]))
+        copy(subs, ps.subscribers[topic])
+        ps.mu.RUnlock()
+
+        for _, ch := range subs {
+            select {
+            case ch <- Message{Topic: topic, Data: data}:
+            default:
+                // Subscriber's buffer is full → drop message (или блокировать?)
+                // Alternative: log warning, or use a separate goroutine
+            }
+        }
+    }
+
+    // Использование
+    func main() {
+        ps := NewPubSub()
+        ch := ps.Subscribe("news", 10)
+
+        go func() {
+            for msg := range ch {
+                fmt.Printf("Received: %v\n", msg.Data)
+            }
+        }()
+
+        ps.Publish("news", "Hello, World!")
+        time.Sleep(100 * time.Millisecond)
+        ps.Unsubscribe("news", ch)
+    }
+    ```
+
+    **Ключевые решения:**
+    - `RWMutex` — множественные читатели (Publish), эксклюзивная запись (Subscribe/Unsubscribe);
+    - Buffered channels — publisher не блокирует при медленных подписчиках;
+    - `select { default: }` — drop при переполнении (настраиваемая политика);
+    - Copy subscribers slice under RLock — чтобы не держать lock во время отправки.
+
+    </details>
+
+---
+
+  - Вопрос №8: [ Найди и исправь race condition ] ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow)
+
+    <details>
+      <summary>Код с багом</summary>
+
+    ```go
+    // БАГ: race condition на map
+    type Cache struct {
+        data map[string]string
+    }
+
+    func (c *Cache) Get(key string) string {
+        return c.data[key]
+    }
+
+    func (c *Cache) Set(key, value string) {
+        c.data[key] = value
+    }
+
+    // Concurrent access → fatal error: concurrent map read and map write
+    ```
+
+    </details>
+
+    <details>
+      <summary>Решение</summary>
+
+    ```go
+    // Вариант 1: sync.RWMutex
+    type SafeCache struct {
+        mu   sync.RWMutex
+        data map[string]string
+    }
+
+    func (c *SafeCache) Get(key string) (string, bool) {
+        c.mu.RLock()
+        defer c.mu.RUnlock()
+        val, ok := c.data[key]
+        return val, ok
+    }
+
+    func (c *SafeCache) Set(key, value string) {
+        c.mu.Lock()
+        defer c.mu.Unlock()
+        c.data[key] = value
+    }
+
+    // Вариант 2: sync.Map (read-heavy, different keys)
+    type ConcurrentCache struct {
+        data sync.Map
+    }
+
+    func (c *ConcurrentCache) Get(key string) (string, bool) {
+        val, ok := c.data.Load(key)
+        if !ok {
+            return "", false
+        }
+        return val.(string), true
+    }
+
+    func (c *ConcurrentCache) Set(key, value string) {
+        c.data.Store(key, value)
+    }
+
+    // Вариант 3: single goroutine owner (channel-based)
+    type ChannelCache struct {
+        get    chan getRequest
+        set    chan setRequest
+    }
+
+    type getRequest struct {
+        key    string
+        result chan<- string
+    }
+
+    type setRequest struct {
+        key   string
+        value string
+    }
+
+    func NewChannelCache() *ChannelCache {
+        c := &ChannelCache{
+            get: make(chan getRequest),
+            set: make(chan setRequest),
+        }
+        go c.run()
+        return c
+    }
+
+    func (c *ChannelCache) run() {
+        data := make(map[string]string)
+        for {
+            select {
+            case req := <-c.set:
+                data[req.key] = req.value
+            case req := <-c.get:
+                req.result <- data[req.key]
+            }
+        }
+    }
+
+    func (c *ChannelCache) Get(key string) string {
+        result := make(chan string, 1)
+        c.get <- getRequest{key: key, result: result}
+        return <-result
+    }
+
+    func (c *ChannelCache) Set(key, value string) {
+        c.set <- setRequest{key: key, value: value}
+    }
+    ```
+
+    **Когда что:**
+    - `RWMutex` — general purpose, read-heavy с occasional writes;
+    - `sync.Map` — много разных ключей, write-once read-many;
+    - Channel-owner — сложная логика, нужна сериализация операций.
+
+    </details>
+
+---
+
+  </details>
+
+---
+
