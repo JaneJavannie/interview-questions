@@ -802,6 +802,34 @@
 
 ---
 
+### Вопрос №33: [ Что такое рефлексия? ]
+
+<details>
+<summary>Ответ</summary>
+
+* Рефлексия в программировании — это механизм, который позволяет программам исследовать информацию о типах и структурах данных во время выполнения.
+  В Go рефлексия основана на двух ключевых типах: Type и Value, которые определены в пакете reflect.
+
+  С помощью рефлексии можно:
+  - Определять тип переменной во время выполнения.
+  - Исследовать структуры и их поля, интерфейсы, значения массивов и множество других аспектов данных.
+  - Создавать новые значения, изменять их и вызывать методы на них динамически.
+
+  Зачем это нужно?
+  Рефлексия часто используется в ситуациях, где типы данных неизвестны до времени выполнения. Например, она полезна при работе с библиотеками для маршалинга
+  и анмаршалинга данных (например, JSON, XML), создании ORM, фреймворков для тестирования и многом другом.
+
+  Осторожно!!!
+  Несмотря на свою мощь, рефлексию следует использовать осторожно:
+  - Производительность: Рефлексивные операции обычно медленнее, чем их нерефлексивные аналоги.
+  - Читаемость кода: Рефлексия может сделать код сложнее для понимания и поддержки.
+  - Типобезопасность: Рефлексия может привести к ошибкам во время выполнения из-за неправильного использования типов или несуществующих полей/методов.
+
+  Таким образом, рефлексия — мощный, но "острый" инструмент, и его следует использовать разумно.
+</details>
+
+---
+
 </details>
 
 <!-- Численные типы -->
@@ -2321,6 +2349,56 @@ mu.Unlock()
   т.к. исключают случайный неатомарный доступ и гарантируют выравнивание.
 * Правило: начинайте с мьютекса (проще рассуждать о корректности), переходите на atomic
   только если профилирование показало contention на мьютексе.
+
+</details>
+
+---
+
+### Вопрос №14: [ Ограничения атомарных операций. CAS ]
+
+<details>
+<summary>Ответ</summary>
+
+* Атомарными могут быть только некоторые операции, только некоторых типов данных, в основном целочисленные (int32, int64, uint32, uint64, uintptr, pointer).
+  Например, в Go пакет `sync/atomic` не поддерживает float64 напрямую — нет атомарных операций для чисел с плавающей точкой.
+  Как выход - использовать CAS - compare and swap atomic operation
+* Отдельное замечание: операции с плавающей точкой не ассоциативны, т.е. (a+b)+c != a + (b+c) — это ограничение арифметики с плавающей точкой, а не атомарных операций.
+ ```go
+     var a, b, c float64
+     a = 1
+     b = math.Pow(10 , 99)
+     c = math.Pow(-10 , 99)
+     aa := (a + b) + c // == 0
+     bb := a + (b + c) // == 1
+ ```
+* Медленная операция, т.к. сериализует доступ к памяти 
+
+* Compare and swap is a technique used when designing concurrent algorithms. Basically, compare and swap compares an expected value 
+    to the concrete value of a variable, and if the concrete value of the variable is equals to the expected value, 
+    swaps the value of the variable for a new variable.
+* Check Then Act - Must Be Atomic
+
+* In computer science, compare-and-swap (CAS) is an atomic instruction used in multithreading to achieve synchronization. 
+  It compares the contents of a memory location with a given value and, only if they are the same, 
+  modifies the contents of that memory location to a new given value. 
+ This is done as a single atomic operation. The atomicity guarantees that the new value is calculated based on up-to-date information; 
+ if the value had been updated by another thread in the meantime, the write would fail. 
+    The result of the operation must indicate whether it performed the substitution; 
+    this can be done either with a simple boolean response (this variant is often called compare-and-set), 
+    or by returning the value read from the memory location (not the value written to it).
+    A compare-and-swap operation is an atomic version of the following pseudocode, where * denotes access through a pointer:[1]
+
+    function cas(p: pointer to int, old: int, new: int) is
+        if *p ≠ old
+            return false
+        *p ← new
+        return true
+
+    Algorithms built around CAS typically read some key memory location and remember the old value. 
+    Based on that old value, they compute some new value. Then they try to swap in the new value using CAS, 
+    where the comparison checks for the location still being equal to the old value. 
+    If CAS indicates that the attempt has failed, it has to be repeated from the beginning: 
+    the location is re-read, a new value is re-computed and the CAS is tried again. 
 
 </details>
 
