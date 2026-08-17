@@ -99,23 +99,7 @@
 
 ---
 
-### Вопрос №4: [ Что такое idempotency key и зачем он нужен? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Idempotency Key** — уникальный ID, который клиент отправляет с запросом (обычно в header `Idempotency-Key`).
-* Сервер сохраняет результат первого запроса и при повторном запросе с тем же key возвращает сохранённый результат,
-  не выполняя операцию повторно.
-* Критично для POST (не идемпотентного): при таймауте клиент ретраит — без idempotency key будет двойное списание.
-* Stripe, AWS, GitHub и др. поддерживают `Idempotency-Key` header.
-* Реализация: хранить key + результат в БД (с TTL), проверять до выполнения.
-
-</details>
-
----
-
-### Вопрос №5: [ REST vs RPC — в чём разница? ]
+### Вопрос №4: [ REST vs RPC — в чём разница? ]
 
 <details>
 <summary>Ответ</summary>
@@ -131,7 +115,7 @@
 
 ---
 
-### Вопрос №6: [ Что такое Richardson Maturity Model? ]
+### Вопрос №5: [ Что такое Richardson Maturity Model? ]
 
 <details>
 <summary>Ответ</summary>
@@ -826,24 +810,6 @@ GET /products?category=electronics&min_price=100&max_price=500&sort=-price,name
 
 ---
 
-### Вопрос №5: [ Что такое Rate Limiting и какие статус-коды использовать? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Rate Limiting** — ограничение количества запросов от клиента в единицу времени.
-* **429 Too Many Requests** — стандартный статус-код.
-* **Headers**:
-  - `X-RateLimit-Limit: 100` — максимум запросов в окне.
-  - `X-RateLimit-Remaining: 42` — осталось.
-  - `X-RateLimit-Reset: 1699999999` — Unix timestamp когда лимит сбросится.
-  - `Retry-After: 30` — через сколько секунд можно повторить.
-* Алгоритмы:
-  - **Fixed window** — лимит на фиксированный период (1 мин).
-  - **Sliding window** — окно "скользит" от первого запроса.
-  - **Token bucket** — tokens пополняются со скоростью R, каждый запрос = 1 token. Позволяет burst.
-  - **Leaky bucket** — requests "вытекают" с постоянной скоростью, излишек в очереди.
-
 </details>
 
 ---
@@ -920,18 +886,6 @@ GET /products?category=electronics&min_price=100&max_price=500&sort=-price,name
 </details>
 
 ---
-
-### Вопрос №4: [ Что такое BFF (Backend for Frontend)? ] ![Static Badge](https://img.shields.io/badge/Middle-yellow)
-
-<details>
-<summary>Ответ</summary>
-
-* **BFF** — паттерн: отдельный backend-сервис для каждого типа клиента (web, mobile iOS, mobile Android).
-* Вместо одного универсального API — каждый BFF отдаёт ровно те данные, которые нужны конкретному клиенту.
-* BFF агрегирует данные из нескольких микросервисов, преобразует формат, кэширует.
-* Плюсы: оптимизированный payload (нет overfetching), клиент-специфичная логика, изоляция клиентов.
-* Минусы: больше сервисов, дублирование, сложность.
-* Часто реализуется на GraphQL или на thin REST gateway.
 
 </details>
 

@@ -277,6 +277,15 @@
   | **Different limits for different tiers** | Конфигурация в БД + in-memory cache конфигов (обновление по pub/sub) |
   | **Global vs per-instance limits** | Per-instance: local counter (быстро, но неточно); Global: Redis (точно, но медленнее) |
 
+* **HTTP-интерфейс (ответы клиенту):**
+  - При превышении лимита возвращать **`429 Too Many Requests`**;
+  - Заголовки:
+    - `X-RateLimit-Limit` — максимальное количество запросов за окно;
+    - `X-RateLimit-Remaining` — оставшееся количество запросов;
+    - `X-RateLimit-Reset` — Unix timestamp сброса окна (когда лимит обновится);
+    - `Retry-After` — через сколько секунд можно повторить запрос (или HTTP-date).
+  - Клиент должен реализовать exponential backoff + jitter при получении 429.
+
 </details>
 
 ---

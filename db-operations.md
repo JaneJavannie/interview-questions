@@ -1,30 +1,12 @@
-# Базы данных: эксплуатация и оптимизация — Вопросы и ответы
+# Дублирующиеся вопросы (перенесены в sql-postgres-questions.md)
 
-Файл содержит вопросы по эксплуатации БД: индексы, оптимизация запросов, транзакции,
-репликация, бэкапы, миграции, мониторинг. Дополняет `sql-postgres-questions.md` темами
-по операционной практике работы с БД.
-
-Уровни сложности:
-- ![Static Badge](https://img.shields.io/badge/Middle-yellow) — Middle разработчик
-- ![Static Badge](https://img.shields.io/badge/Senior-red) — Senior разработчик
+> **Внимание:** Этот файл содержит вопросы, которые дублируют содержание
+> `sql-postgres-questions.md`. Уникальные вопросы уже перенесены туда.
+> Удалите этот файл после проверки дубликатов.
 
 ---
 
-# Оглавление
-
-1. [Индексы: глубокое погружение](#1-индексы-глубокое-погружение)
-2. [Оптимизация запросов](#2-оптимизация-запросов)
-3. [Транзакции и изоляция](#3-транзакции-и-изоляция)
-4. [Репликация и High Availability](#4-репликация-и-high-availability)
-5. [Бэкапы и восстановление](#5-бэкапы-и-восстановление)
-6. [Миграции схемы](#6-миграции-схемы)
-7. [Мониторинг и деградация](#7-мониторинг-и-деградация)
-8. [Шардинг и масштабирование](#8-шардинг-и-масштабирование)
-9. [Сравнение БД: SQL vs NoSQL vs columnar vs search](#9-сравнение-бд-sql-vs-nosql-vs-columnar-vs-search)
-
----
-
-## 1. Индексы: глубокое погружение
+## 1. Индексы
 
 <details>
 <summary><b>Развернуть раздел</b></summary>
@@ -234,68 +216,6 @@ for _, u := range users {
 
 ---
 
-### Вопрос №4: [ Что такое prepared statements и когда использовать? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Prepared statement** — запрос с параметрами, который парсится и планируется один раз, выполняется много раз.
-* `PREPARE get_user AS SELECT * FROM users WHERE id = $1;` → `EXECUTE get_user(42);`
-* **Плюсы**:
-  - Парсинг/планирование один раз → быстрее при повторных вызовах.
-  - Защита от SQL injection (параметры не интерполируются в SQL).
-* **В PostgreSQL**:
-  - **Custom plan** — план с конкретными значениями параметров (можно лучше оценить).
-  - **Generic plan** — план без значений (универсальный).
-  - После 5 выполнений PostgreSQL решает: использовать generic (если stable) или custom.
-* **Минусы**:
-  - `SET` / `RESET` — prepared statements не видят изменений в search_path и других SET.
-  - Session-level: живёт до DISCARD или закрытия сессии. PgBouncer в transaction mode — проблемы с prepared
-    statements (нужен `max_prepared_statements` в PgBouncer).
-* В Go: `database/sql` с `db.QueryContext(ctx, "SELECT ... WHERE id = $1", id)` использует prepared statements
-  (зависит от драйвера).
-
-</details>
-
----
-
-### Вопрос №5: [ Чем отличается CTE от подзапроса? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **CTE** (Common Table Expression, `WITH`):
-```sql
-WITH active_users AS (
-    SELECT * FROM users WHERE active = true
-)
-SELECT * FROM active_users WHERE created_at > '2025-01-01';
-```
-* **Подзапрос**:
-```sql
-SELECT * FROM (SELECT * FROM users WHERE active = true) au
-WHERE created_at > '2025-01-01';
-```
-* В PostgreSQL ≤ 11: CTE — **optimization fence** (материализуется, выполняется один раз, планировщик
-  не может "протолкнуть" условия внутрь). С 12+ — по умолчанию inline (если не `MATERIALIZED`).
-* `WITH ... AS MATERIALIZED (...)` — принудительная материализация (выполнить один раз, сохранить).
-  Полезно, если CE дорогой и используется несколько раз.
-* `WITH ... AS NOT MATERIALIZED (...)` — inline (протолкнуть условия).
-* **Recursive CTE** — для иерархических запросов (деревья, графы):
-```sql
-WITH RECURSIVE descendants AS (
-    SELECT id, parent_id, name FROM categories WHERE id = 1
-    UNION ALL
-    SELECT c.id, c.parent_id, c.name FROM categories c
-    JOIN descendants d ON c.parent_id = d.id
-)
-SELECT * FROM descendants;
-```
-
-</details>
-
----
-
 </details>
 
 ---
@@ -463,52 +383,7 @@ ORDER BY created_at LIMIT 10 FOR UPDATE SKIP LOCKED;
 
 ---
 
-### Вопрос №2: [ Что такое split-brain и как предотвратить? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Split-brain** — два узла считают себя primary одновременно. Возникает при network partition.
-* Оба primary принимают записи → данные расходятся → конфликт при восстановлении.
-* **Предотвращение**:
-  - **Quorum** — большинство узлов должно согласовать failover. Если узел не может получить кворум —
-    не становится primary.
-  - **STONITH** (Shoot The Other Node In The Head) — перед продвижением реплики, убедиться, что старый
-    primary выключен (fence).
-  - **Witness server** — треться сторона (arbiter), которая помогает кворуму.
-  - **Distributed consensus** — Raft, Paxos — для выбора лидера.
-* В PostgreSQL: **Patroni** (использует etcd/Consul/ZooKeeper для кворума), **repmgr** (использует witness),
-  **pg_auto_failover**.
-* В k8s: operator (CrunchyData, Zalando) управляет failover, использует кворум через k8s API.
-
-</details>
-
----
-
-### Вопрос №3: [ Как настроить read replicas для масштабирования чтения? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Архитектура**: primary (write) + N read replicas.
-* **Маршрутизация**:
-  - HAProxy / PgBouncer / ProxySQL — направляет write-запросы на primary, read — на реплики.
-  - Application-level: разные connection pools для read/write.
-* **Проблема replication lag**:
-  - Пользователь пишет на primary → сразу читает с реплики → не видит своих данных (read-after-write consistency).
-  - Решения:
-    - **Read-after-write через primary**: критичные чтения (свой профиль) — с primary.
-    - **Session stickiness**: после записи, N секунд читать с primary.
-    - **WAL flush check**: приложение проверяет, догнала ли реплика (pg_wal_lsn_diff).
-    - **Causal consistency**: track causality tokens.
-* **Connection pooler** (PgBouncer) — обязательно для большого числа клиентов. `pool_mode = transaction`
-  для большинства случаев.
-
-</details>
-
----
-
-### Вопрос №4: [ Что такое connection pooling и зачем нужен PgBouncer? ]
+### Вопрос №2: [ Что такое connection pooling и зачем нужен PgBouncer? ]
 
 <details>
 <summary>Ответ</summary>
@@ -589,154 +464,11 @@ ORDER BY created_at LIMIT 10 FOR UPDATE SKIP LOCKED;
 
 ---
 
-### Вопрос №3: [ Как протестировать восстановление из бэкапа? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Регулярный drill** — не реже раза в квартал.
-* **Шаги**:
-  1. Поднять тестовый сервер (или Docker контейнер).
-  2. Восстановить base backup: `pg_basebackup` или распаковать tar.
-  3. Настроить `recovery.signal` (PG 12+) или `standby.signal` + `restore_command` для WAL replay.
-  4. Указать `recovery_target_time` / `recovery_target_lsn` для PITR.
-  5. Запустить PostgreSQL, дождаться recovery complete.
-  6. Проверить целостность: `pg_dump`, сравнить row counts, бизнес-запросы.
-  7. Замерить время восстановления (RTO).
-* **Автоматизация**: скрипт, который раз в неделю восстанавливает бэкап на staging и проверяет.
-* **Метрики**: RTO (Recovery Time Objective), RPO (Recovery Point Objective).
-
 </details>
 
 ---
 
-### Вопрос №4: [ Что такое RPO и RTO? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **RPO** (Recovery Point Objective) — максимально допустимая потеря данных (по времени).
-  - RPO = 0 — потеря данных недопустима (synchronous replication, WAL archiving).
-  - RPO = 5 мин — допустимо потерять до 5 минут данных (async replication lag).
-* **RTO** (Recovery Time Objective) — максимально допустимое время простоя при восстановлении.
-  - RTO = 0 — недопустим простой (active-active, hot standby с автоматическим failover).
-  - RTO = 1 час — восстановление в течение часа (автоматический failover + quick restore).
-  - RTO = 24 часа — бэкап раз в день, ручное восстановление.
-* **Связь с архитектурой**:
-  - RPO/RTO = 0 → очень дорого (multi-region active-active).
-  - RPO = минуты, RTO = минуты → standby + автоматический failover (Patroni).
-  - RPO = часы, RTO = часы → бэкапы + ручное восстановление.
-
-</details>
-
----
-
-</details>
-
----
-
-## 6. Миграции схемы
-
-<details>
-<summary><b>Развернуть раздел</b></summary>
-
----
-
-### Вопрос №1: [ Как безопасно добавить колонку с DEFAULT в большой таблице? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Проблема**: `ALTER TABLE big_table ADD COLUMN status VARCHAR DEFAULT 'active'` в PostgreSQL < 11 —
-  переписывает всю таблицу (блокирует на долгое время).
-* **PostgreSQL 11+** — `ADD COLUMN ... DEFAULT` — metadata-only operation (хранит default в каталоге).
-  Новые строки получают default при INSERT, старые — лениво при чтении. **Не блокирует**.
-* **NOT NULL constraint с DEFAULT**:
-  - PG 11+: `ADD COLUMN ... NOT NULL DEFAULT 'active'` — metadata-only (быстро).
-  - PG < 11: добавить колонку (nullable, без default) → обратно обновить по батчам → добавить default →
-    добавить NOT NULL.
-* **Большая таблица + индекс на новую колонку**: `CREATE INDEX CONCURRENTLY` — без блокировки записи.
-* **Backfill данных**:
-```sql
--- Плохо: блокирует таблицу
-UPDATE big_table SET new_col = old_col;
-
--- Хорошо: батчами
-UPDATE big_table SET new_col = old_col WHERE id BETWEEN 1 AND 10000 AND new_col IS NULL;
--- ... повторять
-```
-
-</details>
-
----
-
-### Вопрос №2: [ Как безопасно переименовать колонку? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Проблема**: `ALTER TABLE ... RENAME COLUMN` — мгновенно в PostgreSQL, но **приложение, использующее
-  старое имя, сломается**.
-* **Expand → Migrate → Contract**:
-  1. **Expand**: добавить новую колонку (с триггером или app-level dual-write).
-  2. **Migrate**: backfill — скопировать данные.
-  3. **Contract**: перевести приложение на новую колонку.
-  4. **Cleanup**: удалить старую колонку.
-* Для простых случаев (если есть окно обслуживания) — `RENAME COLUMN` + деплой приложения одновременно.
-* **View** — создать view с новым именем, переключить приложение, потом переименовать в таблице.
-
-</details>
-
----
-
-### Вопрос №3: [ Как безопасно удалить большую таблицу в production? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Проблема**: `DROP TABLE` — блокирует на время cleanup (освобождение extents, удаление индексов).
-  Для огромной таблицы — секунды/минуты блокировки.
-* **Решение**:
-  1. Убедиться, что никто не использует таблицу (мониторинг запросов).
-  2. `RENAME TABLE big_table TO big_table_to_drop;` — мгновенно (atomic rename).
-  3. Приложение больше не видит `big_table`.
-  4. `DROP TABLE big_table_to_drop;` — можно не спешить, никто не блокирует.
-* Альтернатива для partitioned table — drop old partitions по одной: `DROP TABLE big_table_2023_01;`.
-* В PostgreSQL `DROP TABLE` обычно быстро ( metadata + unlink файлов). Но на большой таблице с
-  огромными индексами на нагруженном сервере — может вызвать IO spike.
-
-</details>
-
----
-
-### Вопрос №4: [ Какие инструменты для миграций вы знаете? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **golang-migrate** — Go-инструмент, SQL-файлы (up/down), поддерживает много БД. Embed в Go binary.
-* **goose** — Go-инструмент, SQL или Go-функции для миграций.
-* **Flyway** — Java-экосистема, SQL-файлы, versioned/repeatable migrations.
-* **Liquibase** — XML/YAML/SQL changelog, supports rollback, diff.
-* **Atlas** — declarative schema management (HCL), plan/diff/apply.
-* **dbmate** — легковесный, SQL-файлы, Go.
-* **Sqitch** — dependency-based, no up/down (change + revert scripts).
-* **Prisma Migrate** — TypeScript-экосистема, schema-first.
-* Best practices:
-  - Миграции — immutable (не изменять применённую миграцию, создавать новую).
-  - Forward-only (не использовать rollback в production, создавать revert миграцию).
-  - Idempotent при возможности.
-  - Тестировать на копии production данных.
-
-</details>
-
----
-
-</details>
-
----
-
-## 7. Мониторинг и деградация
+## 6. Мониторинг и деградация
 
 <details>
 <summary><b>Развернуть раздел</b></summary>
@@ -840,98 +572,14 @@ LIMIT 10;
 
 ---
 
-## 8. Шардинг и масштабирование
+## 7. Шардинг и масштабирование
 
 <details>
 <summary><b>Развернуть раздел</b></summary>
 
 ---
 
-### Вопрос №1: [ Когда нужно шардировать БД и какие признаки? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Признаки, что пора**:
-  - CPU/IO на primary постоянно > 80%, оптимизация запросов не помогает.
-  - Data size — десятки TB, индексы не влезают в RAM (shared_buffers).
-  - Write throughput упёрся в IOPS диска.
-  - Backup/restore время > RTO.
-  - Таблица > 1 TB, vacuum занимает часы.
-* **До шардинга** попробовать:
-  - Оптимизация запросов, индексы.
-  - Read replicas (разгрузить чтение).
-  - Партиционирование (разгрузить I/O на одной машине).
-  - Vertical scaling (больше CPU/RAM/SSD).
-  - Архивация старых данных (detach old partitions).
-* **Шардинг** — последнее средство, дорогое в эксплуатации.
-
-</details>
-
----
-
-### Вопрос №2: [ Какие стратегии шардинга существуют? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Range-based** — по диапазону ключа. `shard 1: id 1-1M`, `shard 2: id 1M-2M`.
-  Плюс: просто. Минус: hotspots (последний shard — самый активный).
-* **Hash-based** — `shard = hash(key) % N`. Равномерно распределяет. Минус: добавление нового shard'а
-  требует перераспределения всех данных (consistent hashing решает).
-* **Consistent hashing** — ключи и шарды на кольце. Добавление/удаление шарда перемещает минимум данных.
-  Используется в Cassandra, Redis Cluster.
-* **Directory-based** — отдельный lookup-сервис (routing table) маппит key → shard.
-  Гибко, но lookup — bottleneck (кэшировать).
-* **Geo-based** — по географии (EU users → EU shard, US → US shard). Для data residency (GDPR).
-* **Vertical sharding** (разделение по таблицам/функциям) — users на одном сервере, orders на другом.
-  Проще, но не решает проблему одной огромной таблицы.
-
-</details>
-
----
-
-### Вопрос №3: [ Что такое Citus и как он работает? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Citus** — расширение PostgreSQL для горизонтального масштабирования (sharding).
-* Распределяет большие таблицы по нескольким PostgreSQL-узлам (worker nodes).
-* **Distributed table** — таблица партиционируется по shard key (hash). Каждый shard — обычная PostgreSQL
-  таблица на worker-узле.
-* **Reference table** — реплицируется на все узлы (для small lookup tables, JOINs).
-* **Coordinator node** — принимает запросы, маршрутизирует на worker'ы, собирает результаты.
-* Поддерживает: distributed JOINs (co-located или broadcast), distributed aggregates, INSERT/UPDATE/DELETE.
-* **Когда использовать**: multi-tenant SaaS (shard by tenant_id), time-series, real-time analytics.
-* Плюсы: SQL-совместимость (почти), нет необходимости переписывать приложение полностью.
-* Минусы: не все PostgreSQL-фичи работают (foreign keys на distributed tables, некоторые типы JOINs).
-
-</details>
-
----
-
-### Вопрос №4: [ Что такое Vitess и как он работает? ] ![Static Badge](https://img.shields.io/badge/Senior-red)
-
-<details>
-<summary>Ответ</summary>
-
-* **Vitess** — система шардинга для MySQL (разработана YouTube/Google).
-* **VTGate** — proxy, маршрутизирует SQL-запросы на нужные shard'ы (прозрачно для приложения).
-* **VTTablet** — sidecar для MySQL, управляет репликацией, backup, query serving.
-* **VTOrc** — управление failover и репликацией (аналог Orchestrator).
-* **Topodata** — топология (в etcd) — какие shard'ы где.
-* **Sharding**: hash, range, custom. Resharding online (без даунтайма) — VReplication.
-* **Vertical split** — перенос таблиц между keyspaces (без даунтайма).
-* Используется: YouTube, Slack, GitHub (ранее), Square, Pinterest.
-* Плюсы: transparent sharding для MySQL, battle-tested, online resharding.
-* Минусы: сложность настройки, не все MySQL-фичи (savepoints, XA transactions), только MySQL.
-
-</details>
-
----
-
-### Вопрос №5: [ CAP-теорема и как она применима к БД? ]
+### Вопрос №1: [ CAP-теорема и как она применима к БД? ]
 
 <details>
 <summary>Ответ</summary>
@@ -955,7 +603,7 @@ LIMIT 10;
 
 ---
 
-## 9. Сравнение БД: SQL vs NoSQL vs columnar vs search
+## 8. Сравнение БД: SQL vs NoSQL vs columnar vs search
 
 <details>
 <summary><b>Развернуть раздел</b></summary>
@@ -985,63 +633,7 @@ LIMIT 10;
 
 ---
 
-### Вопрос №2: [ Типы NoSQL БД и когда что выбрать ]
-
-<details>
-<summary>Ответ</summary>
-
-| Тип | Примеры | Data model | Когда выбирать |
-|-----|---------|------------|----------------|
-| **Key-value** | Redis, Memcached, Aerospike, DynamoDB | key → value | Cache, session store, simple lookups, high throughput |
-| **Document** | MongoDB, CouchDB, Firestore | key → JSON/BSON document | Каталоги, CMS, user profiles, content management, гибкая схема |
-| **Column-family** | Cassandra, HBase, ScyllaDB | row key → column families | Time-series, IoT, write-heavy, massive scale, multi-DC |
-| **Graph** | Neo4j, ArangoDB, Dgraph | nodes + edges + properties | Social graph, fraud detection, recommendation, knowledge graph |
-| **Search** | Elasticsearch, OpenSearch, Solr | inverted index | Full-text search, faceted search, log analytics |
-
-* **Key-value** — простейший, самый быстрый. Нет сложных запросов — только GET/SET по key.
-* **Document** — гибкая схема, вложенные объекты, индексы по полям. Хорош для эволюционирующих
-  данных (prototype → production).
-* **Column-family** — write-optimized, linear scalability. Данные моделируются вокруг query
-  patterns (query-driven design).
-* **Graph** — когда отношения важнее самих данных. JOIN в SQL работает плохо для deep graphs
-  (N+1 problem, exponential explosion).
-* **Search** — full-text search, fuzzy matching, aggregations. Не primary DB — secondary index.
-
-</details>
-
----
-
-### Вопрос №3: [ Когда выбрать PostgreSQL, а когда MongoDB? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Выбирайте PostgreSQL, если:**
-  - **ACID-транзакции** критичны (финансы, заказы, биллинг).
-  - **Сложные запросы** — JOIN по нескольким таблицам, subqueries, window functions, CTE.
-  - **Data integrity** — foreign keys, check constraints, unique constraints, triggers.
-  - **Аналитика** — OLAP-запросы (GROUP BY, HAVING, аналитические функции).
-  - **JSON нужен ограниченно** — PostgreSQL имеет JSONB (с индексами GIN).
-  - **Consistency** — strong consistency важнее availability при partition.
-
-* **Выбирайте MongoDB, если:**
-  - **Гибкая схема** — документы одной коллекции могут иметь разные поля (catalog, CMS).
-  - **Embedded documents** — вложенные объекты вместо JOIN (denormalization).
-  - **Horizontal scaling** — built-in sharding (MongoDB Sharded Cluster).
-  - **Write-heavy** — высокая write нагрузка, eventual consistency приемлема.
-  - **Rapid prototyping** — схема меняется часто, нет времени на миграции.
-  - **Geo-distributed** — MongoDB Atlas Global Cluster (data locality по geo-sharding).
-
-* **На практике:**
-  - PostgreSQL + JSONB покрывает большинство use cases MongoDB (с ACID).
-  - MongoDB выбирают, когда реляционная модель не подходит (deeply nested, variable schema,
-    massive horizontal scale).
-
-</details>
-
----
-
-### Вопрос №4: [ Когда выбрать columnar БД (ClickHouse, Snowflake)? ]
+### Вопрос №2: [ Когда выбрать columnar БД (ClickHouse, Snowflake)? ]
 
 <details>
 <summary>Ответ</summary>
@@ -1070,125 +662,6 @@ LIMIT 10;
   - **UPDATE/DELETE** — частые обновления строк (columnar — append-only, update = rewrite).
 
 * **Hybrid:** PostgreSQL (OLTP) + ClickHouse (OLAP) — CDC через Kafka/Debezium.
-
-</details>
-
----
-
-### Вопрос №5: [ Когда выбрать Cassandra / ScyllaDB? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Cassandra** — wide-column store, распределённая, masterless, AP (highly available).
-
-* **Выбирайте Cassandra/ScyllaDB, если:**
-  - **Massive write throughput** — миллионы writes/сек (IoT, event logging, time-series).
-  - **Multi-datacenter** — native multi-DC replication (active-active, geo-distributed).
-  - **Linear scalability** — добавь node → больше throughput (нет re-sharding).
-  - **Always-on** — masterless, нет single point of failure, нет failover downtime.
-  - **Tunable consistency** — ONE (fast, eventual) до ALL (slow, strong).
-  - **Append-only / time-series** — данные пишутся по partition key, сортировка по clustering
-    key (time-ordered).
-
-* **НЕ выбирайте Cassandra, если:**
-  - Нужны **JOIN** — Cassandra не поддерживает.
-  - Нужны **ACID-транзакции** — нет (только lightweight transactions / Paxos — медленно).
-  - Нужны **ad-hoc запросы** — Cassandra query-driven (запросы = primary key), ad-hoc
-    требуют secondary indexes (медленные) или Spark.
-  - Нужны **UPDATE/DELETE** — Cassandra оптимизирована для append, tombstones замедляют.
-  - **Small dataset** — overhead Cassandra не оправдана (< 100 ГБ → PostgreSQL).
-
-* **ScyllaDB** — Cassandra-совместимая, написана на C++ (вместо Java), в 5–10 раз выше
-  throughput, ниже latency. Drop-in replacement.
-
-</details>
-
----
-
-### Вопрос №6: [ Когда выбрать Elasticsearch / OpenSearch? ]
-
-<details>
-<summary>Ответ</summary>
-
-* **Elasticsearch** — distributed search engine, built on Lucene, inverted index.
-
-* **Выбирайте Elasticsearch, если:**
-  - **Full-text search** — поиск по тексту (токенизация, стемминг, fuzzy, synonyms).
-  - **Faceted search** — фильтры по категориям (e-commerce: brand, price range, color).
-  - **Log analytics** — ELK/EFK stack (логи, метрики, APM).
-  - **Autocomplete / suggest** — поиск с автодополнением, suggesters.
-  - **Geo search** — поиск в радиусе, bounding box, geo aggregations.
-  - **Vector search** — semantic search, kNN (с версии 7.x + 8.x).
-
-* **НЕ выбирайте Elasticsearch как primary DB, если:**
-  - **ACID-транзакции** — нет (eventual consistency).
-  - **Relational data** — нет JOIN (parent-child — медленно и ограниченно).
-  - **Point lookups** — медленнее, чем key-value или SQL by PK.
-  - **Frequent updates** — Lucene segments immutable, update = delete + reindex.
-  - **Cost** — Elasticsearch тяжёлый (JVM, много RAM для heap + filesystem cache).
-
-* **Pattern:** Primary DB (PostgreSQL/MongoDB) → CDC/async → Elasticsearch (search index).
-  Приложение пишет в primary DB, search index обновляется асинхронно.
-
-</details>
-
----
-
-### Вопрос №7: [ Полная таблица: какая БД для какой задачи ]
-
-<details>
-<summary>Ответ</summary>
-
-| Задача | БД | Почему |
-|--------|-----|--------|
-| OLTP (транзакции, заказы, биллинг) | PostgreSQL, MySQL | ACID, JOIN, constraints, point lookups |
-| OLAP (аналитика, reporting) | ClickHouse, Snowflake, BigQuery | Columnar, fast aggregations, compression |
-| Cache | Redis, Memcached | In-memory, sub-ms latency |
-| Session store (small) | Redis | TTL, in-memory, simple |
-| Session store (large, TB) | Aerospike | SSD-backed, low latency, cheaper |
-| Document store (CMS, catalog) | MongoDB | Flexible schema, embedded docs |
-| Time-series (IoT, metrics) | ClickHouse, TimescaleDB, InfluxDB | Optimized for time-ordered, high write |
-| Wide-column (massive writes) | Cassandra, ScyllaDB | Multi-DC, linear scale, always-on |
-| Full-text search | Elasticsearch, OpenSearch | Inverted index, fuzzy, faceted |
-| Graph (social, fraud) | Neo4j, ArangoDB | Traversals, path queries |
-| Key-value (simple lookups) | Redis, DynamoDB | Fast, simple, scalable |
-| Vector / semantic search | Elasticsearch (kNN), Pinecone, Milvus | Embedding similarity, ANN |
-| Event log / audit | Kafka (→ ClickHouse/S3 for archive) | Append-only, replay, retention |
-| Counter / leaderboard | Redis (Sorted Set) | Built-in ZADD/ZRANGE |
-| Geo / spatial | PostgreSQL (PostGIS), Elasticsearch | PostGIS — spatial queries, ES — geo search |
-
-</details>
-
----
-
-### Вопрос №8: [ Практический сценарий: выбор БД для e-commerce платформы ]
-
-<details>
-<summary>Ответ</summary>
-
-| Компонент | БД | Почему |
-|-----------|-----|--------|
-| Users, orders, payments | PostgreSQL | ACID, FK, transactions, OLTP |
-| Product catalog (variable attributes) | MongoDB / PostgreSQL (JSONB) | Flexible schema (разные товары — разные атрибуты) |
-| Search (products, autocomplete) | Elasticsearch | Full-text, faceted, fuzzy, synonyms |
-| Cart / session | Redis | TTL, in-memory, low latency |
-| Analytics (sales, funnels) | ClickHouse | Columnar, fast aggregations over millions of rows |
-| Recommendations (user-item graph) | Neo4j / Redis (collaborative filtering) | Graph traversals / sorted sets |
-| Inventory (high write, multi-DC) | Cassandra / ScyllaDB | Write-heavy, multi-DC, always-on |
-| Audit log / event sourcing | Kafka → S3/ClickHouse | Append-only, replay, long retention |
-| Rate limiter | Redis | INCR + EXPIRE, Lua |
-| Image / file storage | S3 / MinIO | Object storage, CDN |
-
-* **Поток данных:**
-  1. API → PostgreSQL (order) + Kafka (order_created event).
-  2. Kafka → ClickHouse (analytics), Elasticsearch (search index update).
-  3. API → Redis (cart, session, rate limit).
-  4. API → MongoDB (product catalog) → Elasticsearch (search index).
-  5. Cassandra → inventory updates (real-time, multi-DC).
-
-* **Ключевой принцип:** **polyglot persistence** — разные БД для разных задач, связанные
-  через events (Kafka) и CDC. Не пытаться уместить всё в одну БД.
 
 </details>
 
