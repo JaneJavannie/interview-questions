@@ -364,7 +364,8 @@ Docker и виртуализация — это два различных под
 **Worker Node:**
 - **Kubelet** — агент на node; следит за pods (health, restart), сообщает статус API Server;
 - **Kube Proxy** — управляет iptables/IPVS rules для service discovery и load balancing;
-- **Container Runtime** — containerd, CRI-O (Docker deprecated since K8s 1.20, удалён в 1.24).
+- **Container Runtime** — containerd, CRI-O (встроенный dockershim удалён начиная с K8s 1.24;
+  Docker-образы по-прежнему работают, для Docker Engine как runtime нужен внешний CRI, например cri-dockerd).
 
 **Поток создания Pod:**
 1. `kubectl apply` → API Server → etcd;
@@ -579,7 +580,8 @@ spec:
 **Опасности:**
 - etcd недоступен → K8s "замораживается" (нет новых pods, но существующие работают);
 - etcd corruption → потеря всего состояния кластера (нужен backup!);
-- Compression: etcd хранит историю ревизий → нужно `--auto-compaction` (по умолчанию отключено; рекомендуется `--auto-compaction-retention=5` в часах).
+- Compression: etcd хранит историю ревизий → нужна автокомпакция: `--auto-compaction-mode=periodic
+  --auto-compaction-retention=5` (по умолчанию отключено; retention — в часах).
 
 </details>
 
@@ -849,7 +851,7 @@ spec:
 
 **VPA:**
 - Рекомендует requests на основе истории;
-- Modes: `Off` (recommend only), `Initial` (только при создании), `Recreate` (пересоздаёт pod при изменении рекомендаций). Режим `Auto` устарел и эквивалентен `Recreate`;
+- Modes: `Off` (recommend only), `Initial` (только при создании), `Recreate` (пересоздаёт pod при изменении рекомендаций), `Auto` (по умолчанию) — применяет рекомендации и при создании, и обновлением существующих pod'ов; сейчас эквивалентен `Recreate`, т.к. это единственный реализованный механизм обновления;
 - **Несовместим с HPA** на CPU/memory (используй HPA с custom metrics + VPA in Off mode).
 
 **Cluster Autoscaler:**
@@ -1177,12 +1179,18 @@ metadata:
   name: api
 spec:
   replicas: 6
+  selector:
+    matchLabels:
+      app: api
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxSurge: 1
       maxUnavailable: 0        # zero downtime: всегда есть replicas
   template:
+    metadata:
+      labels:
+        app: api
     spec:
       terminationGracePeriodSeconds: 60
       containers:
@@ -1255,6 +1263,7 @@ func main() {
 </details>
 
 ---
+
 ### Задача №2: [ Настройка monitoring и alerting для K8s + Redis ] ![Static Badge](https://img.shields.io/badge/Senior-red)
 
 <details>
@@ -1295,7 +1304,7 @@ spec:
 | `redis_memory_used_bytes` / `maxmemory` | Memory usage | > 80% |
 | `redis_connected_clients` | Connections | > maxclients × 0.8 |
 | `redis_keyspace_hits_total` / `redis_keyspace_misses_total` | Hit rate | < 95% |
-| `redis_replication_offset_diff` | Replication lag | > 1MB |
+| `redis_master_repl_offset` − `redis_slave_repl_offset` | Replication lag | > 1MB |
 | `redis_slowlog_length` | Slow queries | increasing |
 | `redis_rejected_connections_total` | Rejected (maxclients) | > 0 |
 
@@ -1329,8 +1338,7 @@ groups:
 
       - alert: RedisReplicationLag
         expr: |
-          redis_replication_offset{role="slave"}
-            - on() group_right() redis_replication_offset{role="master"} > 10000
+          redis_master_repl_offset - redis_slave_repl_offset > 10000
         for: 5m
         annotations:
           summary: "Redis replication lag detected"
@@ -1353,6 +1361,7 @@ groups:
 </details>
 
 ---
+
 ### Задача №3: [ Миграция монолита на микросервисы в K8s (strangler fig pattern) ] ![Static Badge](https://img.shields.io/badge/Senior-red)
 
 <details>
@@ -1438,6 +1447,7 @@ spec:
 </details>
 
 ---
+
 ### Задача №4: [ Troubleshooting: Pod в CrashLoopBackOff. План диагностики ] ![Static Badge](https://img.shields.io/badge/Senior-red)
 
 <details>
@@ -1509,7 +1519,7 @@ kubectl exec -it <debug-pod> -- sh
 # Ручная диагностика: проверить config, env, connectivity
 ```
 
-**Ephemeral debug container (K8s 1.25+):**
+**Ephemeral debug container (K8s 1.23+):**
 ```bash
 kubectl debug <pod-name> -it --image=busybox --target=<container-name>
 ```
@@ -1700,8 +1710,8 @@ kubectl delete pods --field-selector status.phase=Failed  # удалить faile
 <details>
 <summary>Ответ</summary>
 
-- Облачный сервис — это услуга, предоставляемая посредством интернета. Эти услуги часто предоставляются на основе "по требованию" 
-  и позволяют пользователям получить доступ к различным ресурсам и приложениям без необходимости покупки и установки специализированного 
+- Облачный сервис — это услуга, предоставляемая посредством интернета. Эти услуги часто предоставляются на основе "по требованию"
+  и позволяют пользователям получить доступ к различным ресурсам и приложениям без необходимости покупки и установки специализированного
   программного обеспечения или аппаратных средств. Облачные сервисы обычно хостятся в центрах обработки данных, управляемых поставщиками этих услуг.
 
   Облачные сервисы можно разделить на несколько основных категорий:
@@ -1711,7 +1721,7 @@ kubectl delete pods --field-selector status.phase=Failed  # удалить faile
   Примеры включают Amazon Web Services (AWS), Microsoft Azure и Google Cloud Platform (GCP).
 
 - Платформа как услуга (PaaS)
-  Предоставляет платформу и окружение, позволяющие разработчикам создавать, развертывать и управлять приложениями 
+  Предоставляет платформу и окружение, позволяющие разработчикам создавать, развертывать и управлять приложениями
   без забот об аппаратном обеспечении и программном обеспечении.\
   Примеры включают Heroku, Microsoft Azure App Services и Google App Engine.
 
@@ -1720,7 +1730,7 @@ kubectl delete pods --field-selector status.phase=Failed  # удалить faile
   Примеры включают Google Workspace (ранее G Suite), Microsoft Office 365 и Salesforce.
 
 - Функция как услуга (FaaS) или Serverless
-  Это вычислительные сервисы, которые автоматически масштабируются в зависимости от потребностей и позволяют 
+  Это вычислительные сервисы, которые автоматически масштабируются в зависимости от потребностей и позволяют
   пользователям запускать код в ответ на определенные события.\
   Примеры включают AWS Lambda и Azure Functions.
 
@@ -1728,7 +1738,7 @@ kubectl delete pods --field-selector status.phase=Failed  # удалить faile
   Предоставляет место для хранения данных в облаке, которое можно легко масштабировать и доступ к которому можно получить из любого места.\
   Примеры включают Google Drive, Dropbox и Amazon S3.
 
-- Облачные сервисы имеют множество преимуществ, таких как масштабируемость, гибкость, стабильность и экономия на издержках, 
+- Облачные сервисы имеют множество преимуществ, таких как масштабируемость, гибкость, стабильность и экономия на издержках,
   поскольку пользователи не должны покупать, устанавливать и поддерживать физическую инфраструктуру и программное обеспечение.
 
 </details>
@@ -1754,9 +1764,9 @@ kubectl delete pods --field-selector status.phase=Failed  # удалить faile
 <details>
 <summary>Ответ</summary>
 
-- Среда виртуализации и управления облачной инфраструктурой — это комплекс программных и аппаратных решений, 
-  который позволяет создавать, управлять и мониторить виртуальные ресурсы (виртуальные машины, сети, хранилища и т. д.) 
-  на физических серверах. С помощью таких сред можно эффективно размещать приложения и данные, обеспечивая их доступность, 
+- Среда виртуализации и управления облачной инфраструктурой — это комплекс программных и аппаратных решений,
+  который позволяет создавать, управлять и мониторить виртуальные ресурсы (виртуальные машины, сети, хранилища и т. д.)
+  на физических серверах. С помощью таких сред можно эффективно размещать приложения и данные, обеспечивая их доступность,
   безопасность и масштабируемость.
 
 </details>
@@ -1768,9 +1778,14 @@ kubectl delete pods --field-selector status.phase=Failed  # удалить faile
 <details>
 <summary>Ответ</summary>
 
-- Terraform (IaC — инфраструктура как код, не виртуализация)
-- Vagrant
-- VMware
+**Виртуализация:**
+- VMware (vSphere/ESXi), KVM (+ Proxmox), Hyper-V, Xen, VirtualBox;
+- Контейнерная: Docker, containerd, LXC.
+
+**Управление облачной инфраструктурой:**
+- Terraform, OpenTofu (IaC — декларативное описание инфраструктуры, не виртуализация);
+- Vagrant (локальные виртуальные окружения);
+- OpenStack (управление приватным облаком).
 
 </details>
 

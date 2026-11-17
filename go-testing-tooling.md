@@ -245,6 +245,137 @@ func FuzzParseURL(f *testing.F) {
 
 ---
 
+### Вопрос №11: [ Как детерминированно тестировать конкурентный код без time.Sleep? ]
+
+<details>
+<summary>Ответ</summary>
+
+* Ожидайте **событие**, а не предполагаемую длительность работы: канал `ready` для готовности,
+  `ack` после обработки задания, `done` для завершения. Отправка задания сама по себе
+  не подтверждает, что обработка закончилась; подтверждение отправляют после нужного действия.
+* `time.Sleep` не создаёт отношения happens-before и не гарантирует, что worker успел выполниться.
+  Для наблюдения результата нужны каналы, `WaitGroup` или другая подходящая синхронизация.
+* **`testing/synctest.Test` (стабильный API с Go 1.25)** запускает функцию и созданные ею
+  горутины в изолированной bubble. Внутри `time` использует fake clock: таймеры и deadlines
+  можно проверять без ожидания соответствующего реального времени.
+* Fake time продвигается к следующему таймеру, когда все горутины bubble **durably blocked**
+  и нет ожидающего `synctest.Wait`. Примеры: ожидание на канале, созданном внутри bubble,
+  `time.Sleep`, `sync.Cond.Wait`. После выхода корневой горутины время больше не продвигается.
+* Не всякая блокировка подходит: ожидание `Mutex`/`RWMutex`, сетевого I/O или syscall
+  не считается durably blocked. Внешние процессы и реальные соединения не становятся fake;
+  для таких зависимостей нужны тестовые двойники либо отдельные интеграционные тесты.
+* `synctest.Wait()` вызывают внутри bubble: он ждёт, пока остальные горутины завершатся
+  или станут durably blocked. Это точка синхронизации, **не команда завершить горутины**
+  и не способ перемотать время. Fake `Sleep` сам по себе тоже не синхронизирует доступ к памяти.
+* `synctest.Test` ждёт выхода всех горутин bubble; deadlock приводит к провалу теста.
+  `synctest` не перебирает все варианты планирования и не заменяет `go test -race`.
+
+Полный пример для `_test.go` (Go 1.25+): проверяем отсутствие результата до отмены
+и получение именно `context.Canceled` после неё. Результат передаётся через канал.
+
+```go
+package tooling_test
+
+import (
+    "context"
+    "testing"
+    "testing/synctest"
+)
+
+func TestCancellationSynctest(t *testing.T) {
+    synctest.Test(t, func(t *testing.T) {
+        ctx, cancel := context.WithCancel(t.Context())
+        defer cancel()
+        done := make(chan error, 1)
+        go func() {
+            <-ctx.Done()
+            done <- ctx.Err()
+        }()
+
+        synctest.Wait()
+        select {
+        case err := <-done:
+            t.Fatalf("worker finished before cancellation: %v", err)
+        default:
+        }
+
+        cancel()
+        synctest.Wait()
+        select {
+        case err := <-done:
+            if err != context.Canceled {
+                t.Fatalf("worker error = %v, want %v", err, context.Canceled)
+            }
+        default:
+            t.Fatal("worker did not report cancellation")
+        }
+    })
+}
+```
+
+Документация: [testing/synctest](https://pkg.go.dev/testing/synctest).
+
+</details>
+
+---
+
+### Вопрос №12: [ Как связать жизненный цикл worker с T.Context? ]
+
+<details>
+<summary>Ответ</summary>
+
+* **`t.Context()` доступен с Go 1.24**. Его контекст отменяется непосредственно перед
+  выполнением функций `t.Cleanup`, поэтому cleanup может дождаться остановки worker (join).
+* Нельзя синхронно ждать `<-t.Context().Done()` в теле теста до его возврата:
+  тест не дойдёт до фазы, в которой этот контекст отменяется. Ожидание переносите в cleanup.
+* Сама отмена не означает завершение worker: он должен обработать `ctx.Done()` и сообщить
+  о выходе через `done`. Регистрируйте cleanup до запуска worker, чтобы join состоялся и при `t.Fatal`.
+* Для **явной проверки cancellation в теле теста** создайте дочерний контекст через
+  `context.WithCancel(t.Context())`, вызовите `cancel()` и проверьте ответ worker, как выше.
+  Отмена дочернего контекста не отменяет контекст самого теста; `defer cancel()` освобождает ресурсы.
+
+Полный lifecycle-тест для `_test.go` (Go 1.24+): worker ждёт отмены и завершается,
+а cleanup подтверждает его выход. Закрытие `done` синхронизирует чтение `workerErr`.
+
+```go
+package tooling_test
+
+import (
+    "context"
+    "testing"
+)
+
+func TestWorkerLifecycle(t *testing.T) {
+    ctx := t.Context()
+    ready := make(chan struct{})
+    done := make(chan struct{})
+    var workerErr error
+    t.Cleanup(func() {
+        <-done
+        if workerErr != context.Canceled {
+            t.Errorf("worker error = %v, want %v", workerErr, context.Canceled)
+        }
+    })
+    go func() {
+        defer close(done)
+        close(ready)
+        <-ctx.Done()
+        workerErr = ctx.Err()
+    }()
+    <-ready
+    if err := ctx.Err(); err != nil {
+        t.Fatalf("test context canceled before cleanup: %v", err)
+    }
+}
+```
+
+Если worker использует общий ресурс, учитывайте LIFO: cleanup с join должен выполниться
+до закрытия этого ресурса. Документация: [T.Context](https://pkg.go.dev/testing#T.Context).
+
+</details>
+
+---
+
 </details>
 
 ---
@@ -290,10 +421,10 @@ func BenchmarkFoo(b *testing.B) {
 func BenchmarkSort(b *testing.B) {
     b.ReportAllocs()
     for i := 0; i < b.N; i++ {
-        data := generateData(1000)
         b.StopTimer()
-        sort.Ints(data)
+        data := generateData(1000) // подготовка — не измеряем
         b.StartTimer()
+        sort.Ints(data) // измеряем только сортировку
     }
 }
 ```
@@ -364,6 +495,51 @@ benchstat old.txt new.txt
 * `benchstat` — утилита для статистического сравнения результатов бенчмарков.
 * `-count=10` запускает бенчмарк 10 раз для уменьшения шума.
 * `-benchmem` включает статистику по аллокациям.
+
+</details>
+
+---
+
+### Вопрос №7: [ Чем B.Loop удобнее цикла по b.N? ]
+
+<details>
+<summary>Ответ</summary>
+
+* **`b.Loop()` доступен с Go 1.24** и сам определяет продолжительность измерения.
+  Функция бенчмарка вызывается один раз на измерение, а не повторно при подборе `b.N`.
+* Первый вызов `Loop` сбрасывает таймер и счётчики аллокаций: setup до цикла не измеряется.
+  Возвращая `false`, `Loop` останавливает таймер, поэтому cleanup после цикла тоже исключён.
+* Подготовка **внутри** цикла автоматически не исключается: для неё используйте пару
+  `b.StopTimer()` / `b.StartTimer()`. `b.ResetTimer()` обнуляет накопленные измерения,
+  но не меняет состояние таймера; вызывать его на каждой итерации неправильно.
+* Пишите именно **`for b.Loop() { ... }`**. Компилятор защищает вызовы в теле такой формы
+  от полного удаления из-за неиспользуемого результата; не прячьте условие в helper.
+* Не смешивайте `Loop` с циклом по `b.N` или с `b.RunParallel` в одном бенчмарке.
+  Для параллельного измерения используйте отдельный бенчмарк с `RunParallel` / `pb.Next()`.
+  После выхода из `Loop` значение `b.N` можно читать для расчёта дополнительных метрик.
+
+Полный пример для `_test.go` (Go 1.24+): измеряем SHA-256, а не подготовку входных данных.
+
+```go
+package tooling_test
+
+import (
+    "crypto/sha256"
+    "testing"
+)
+
+func BenchmarkSHA256Loop(b *testing.B) {
+    data := []byte("payload for SHA-256 benchmark")
+    b.ReportAllocs()
+    b.SetBytes(int64(len(data)))
+    for b.Loop() {
+        sha256.Sum256(data)
+    }
+}
+```
+
+Ограниченный запуск: `go test -run='^$' -bench='^BenchmarkSHA256Loop$' -benchtime=100x -count=1 -benchmem`.
+Документация: [B.Loop](https://pkg.go.dev/testing#B.Loop).
 
 </details>
 
@@ -596,8 +772,10 @@ require (
 
 * `go get` — добавляет/обновляет зависимость в `go.mod` (добавляет в `require`).
 * `go install` — компилирует и устанавливает бинарник в `$GOBIN` (или `$GOPATH/bin`).
-* Начиная с Go 1.17, `go install` не изменяет `go.mod`: `go install example.com/tool@v1.2.3` устанавливает бинарник глобально.
-* `go get` с Go 1.18 используется только для управления зависимостями в `go.mod`.
+* Начиная с Go 1.16, `go install example.com/tool@v1.2.3` устанавливает бинарник независимо
+  от текущего модуля и не изменяет `go.mod`.
+* Начиная с Go 1.17, `go get` больше не собирает и не устанавливает пакеты — используется
+  только для управления зависимостями в `go.mod`.
 
 </details>
 
@@ -633,7 +811,7 @@ require (
 
 * `go mod vendor` — копирует все зависимости в `vendor/` директорию.
 * При наличии `vendor/`, `go build` использует её вместо загрузки модулей из кэша/сети.
-* `-mod=vendor` (включается автоматически при наличии `vendor/`).
+* `-mod=vendor` (включается автоматически при наличии `vendor/`, если в `go.mod` указана версия 1.14+).
 * Полезно для: CI без интернета, air-gap окружения, гарантия воспроизводимости.
 * Минусы: большой объём в VCS, нужно обновлять вручную через `go mod vendor`.
 
@@ -838,6 +1016,35 @@ dlv attach <pid>              # подключение к работающему
 
 ---
 
+### Вопрос №8: [ Как проводить нагрузочное тестирование? (vegeta, k6, wrk) ] ![Static Badge](https://img.shields.io/badge/Senior-red)
+
+<details>
+<summary>Ответ</summary>
+
+* **Цель**: найти предел пропускной способности, деградацию латентности, утечки (см. вопрос про
+  утечки памяти в go-questions) до продакшена.
+* **Инструменты**:
+  - **vegeta** (Go) — атака с постоянной частотой (constant rate): `vegeta attack -rate=1000 -duration=60s | vegeta report`.
+    Показывает, что система не справляется уже при заданной нагрузке (а не «упирается и молчит»);
+  - **k6** — сценарии на JS: этапы (ramp-up, пик, спад), пороги (thresholds: `p99 < 300ms`),
+    интеграция в CI, экспорт метрик в Prometheus;
+  - **wrk / wrk2** — компактные бенчмарки для быстрых прогонов (корректная координация задержек в wrk2).
+* **Виды нагрузки**:
+  - **нагрузочное** — ожидаемый продакшен-трафик;
+  - **стресс** — поиск предела и поведения за ним (деградация, очереди, ошибки);
+  - **пиковое (spike)** — резкий рост в разы;
+  - **длительное (soak)** — часы под нагрузкой, выявляет утечки и фрагментацию.
+* **Что измерять**: RPS, латентность **процентилями** (p50/p95/p99, не средним), долю ошибок,
+  потребление CPU/RAM/GC-паузы цели.
+* **Профилирование под нагрузкой**: включить `net/http/pprof` на отдельном порту и снять
+  CPU/heap-профили во время прогона.
+* **Антипаттерн**: гнать нагрузку на один инстанс через тот же узел, где стоит генератор —
+  упрётся в клиент, а не в сервер.
+
+</details>
+
+---
+
 </details>
 
 ---
@@ -968,6 +1175,32 @@ func TestWriteFile(t *testing.T) {
 * **Явные ошибки** — `if err != nil` всегда, без паник в бизнес-логике.
 * **Минимум ветвлений** — меньше edge cases для тестирования.
 * **Separation of I/O** — отделить чтение/запись от бизнес-логики.
+
+</details>
+
+---
+
+### Вопрос №7: [ Что такое golangci-lint? Какие линтеры включать? ] ![Static Badge](https://img.shields.io/badge/Senior-red)
+
+<details>
+<summary>Ответ</summary>
+
+* **golangci-lint** — агрегатор десятков линтеров: запуск параллельно, кэширование, единый
+  конфиг `.golangci.yml`. Установка: `go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest`.
+* **Обязательный минимум** (обычно включён по умолчанию):
+  - `govet` — подозрительные конструкции;
+  - `errcheck` — необработанные ошибки;
+  - `staticcheck` — самый мощный набор проверок (включая SA, S, ST);
+  - `unused` — мёртвый код.
+* **Для сеньор-проектов дополнительно**:
+  - `bodyclose` / `noctx` — незакрытые `resp.Body`, запросы без контекста;
+  - `gosec` — security-проверки (слабая криптография, инъекции);
+  - `gocritic`, `revive` — стилевые идиомы;
+  - `fieldalignment` (через go vet) — паддинг структур;
+  - `prealloc`, `copyloopvar` — микрооптимизации и ловушки циклов.
+* **Практика**: линтеры в CI обязательным шагом; точечные подавления `//nolint:<linter> // причина`,
+  глобальные исключения в конфиге держать минимальными.
+* **Важно**: линтер не заменяет ревью — он находит классы ошибок, но не дизайн-проблемы.
 
 </details>
 

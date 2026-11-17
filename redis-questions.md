@@ -63,22 +63,27 @@ Redis экспонирует абстрактные типы, но внутри 
 | Тип Redis | Внутренняя реализация | Когда переключается |
 |---|---|---|
 | **String** | SDS (Simple Dynamic String) | всегда |
-| **List** | ziplist (маленькие) → quicklist (большие) | > 128 элементов или > 64 байт/элемент |
-| **Hash** | ziplist → hashtable | > 128 полей или > 64 байт/значение |
+| **List** | listpack (маленькие) → quicklist из listpack'ов (большие) | > 128 элементов или > 64 байт/элемент |
+| **Hash** | listpack → hashtable | > 128 полей или > 64 байт/значение |
 | **Set** | intset (только int) → hashtable | > 512 элементов или не-int значения |
-| **ZSet** | ziplist → skiplist + hashtable | > 128 элементов или > 64 байт/значение |
+| **ZSet** | listpack → skiplist + hashtable | > 128 элементов или > 64 байт/значение |
 | **Stream** | radix tree | всегда |
 | **HyperLogLog** | dense/sparse representation | по плотности |
 
-**Ziplist** — компактный contiguous блок памяти, отлично для маленьких списков (cache friendly, мало overhead). Минус: O(n) вставка/удаление в середину.
+**Listpack** (Redis 7.0+; до 7.0 — **ziplist**) — компактный contiguous блок памяти, отлично для маленьких
+коллекций (cache friendly, мало overhead). Listpack заменил ziplist, устранив проблему каскадных обновлений
+(cascade update). Минус: O(n) вставка/удаление в середину.
 
-**Quicklist** — связный список ziplist'ов (компромисс между списком и массивом).
+**Quicklist** — связный список listpack'ов (до Redis 7.0 — ziplist'ов); компромисс между списком и массивом.
 
 **Skiplist** — вероятностная структура для упорядоченных множеств. O(log n) поиск/вставка/удаление. Проще чем balanced BST, и range queries эффективны.
 
 **intset** — отсортированный массив целых чисел. Бинарный поиск O(log n). Компактнее hashtable для маленьких int-множеств.
 
-**Механизм переключения** — `hash-max-ziplist-entries`, `list-max-ziplist-size` и т.д. При превышении — автоматическая конвертация в более мощную структуру (односторонняя, обратно не возвращается).
+**Механизм переключения** — `hash-max-ziplist-entries`, `list-max-ziplist-size` и т.д. (с Redis 7.0
+параметры переименованы в `hash-max-listpack-*`, `list-max-listpack-*`, `zset-max-listpack-*`;
+старые имена работают как алиасы). При превышении — автоматическая конвертация в более мощную
+структуру (односторонняя, обратно не возвращается).
 
 </details>
 
@@ -178,7 +183,9 @@ PUBLISH channel1 "Hello"
 - Сообщения не сохраняются → нет redelivery;
 - Нет consumer groups (только в Streams);
 - Медленные подписчики не блокируют publisher, но теряют данные;
-- В кластере: сообщения не шардируются — публикуются на все узлы, знающие о канале.
+- В кластере: классический `PUBLISH` не шардируется — сообщение уходит на все узлы.
+  С Redis 7.0 есть **sharded pub/sub** (`SPUBLISH`/`SSUBSCRIBE`) — канал привязан к слоту,
+  сообщение доставляется только владельцу слота.
 
 **Redis Streams (рекомендуется вместо Pub/Sub):**
 ```redis
@@ -235,7 +242,10 @@ EVALSHA a1b2c3... 1 key1 arg1
 **Ограничения:**
 - **Блокирует event loop** — долгий скрипт парализует Redis (максимум `lua-time-limit`, default 5s);
 - **Нет I/O:** скрипт не может делать сетевые запросы;
-- **Determinism:** нельзя использовать `TIME`, `RANDOMKEY` (результат должен быть детерминированным для replication);
+- **Determinism:** начиная с Redis 3.2 (репликация эффектов вместо репликации скриптов) недетерминированные
+  команды вроде `TIME` и `RANDOMKEY` в скриптах разрешены; `TIME` внутри скрипта возвращает время,
+  зафиксированное на момент начала выполнения скрипта (детерминировано в рамках одного запуска).
+  Ограничение: после вызова недетерминированной команды скрипту запрещены команды записи;
 - **Отладка:** `redis-cli --ldb` — step debugger для Lua.
 
 **Redis 7.0+:** Redis Functions — улучшенные Lua-скрипты с библиотеками, better management.
@@ -536,11 +546,11 @@ end
 - Репликация async → failover может дать lock другому.
 
 **Redlock algorithm (Martin Kleppmann critique):**
-1. Клиент запрашивает lock на N (обычно 5) независимых Redis-узлов;
-2. `SET NX PX` на каждый с коротким timeout;
+1. Клиент создаёт новый уникальный случайный token (например, UUIDv4) для каждой попытки захвата и запрашивает lock на N (обычно 5) независимых Redis-узлов;
+2. `SET NX PX` с одним и тем же token на каждый узел с коротким timeout;
 3. Если получено большинство (≥3 из 5) за разумное время → lock acquired;
 4. Время действия lock = TTL - время на acquire;
-5. Release: отправить DEL на все узлы.
+5. Release: выполнить Lua-скрипт выше на каждом узле (`KEYS[1]` — ключ lock, `ARGV[1]` — token этой попытки), в том числе при частичном/неудачном захвате и на узлах с timeout. Атомарный compare-and-delete не удалит lock нового владельца после истечения старого TTL.
 
 **Критика Redlock (Kleppmann):**
 - **GC pause:** клиент получил lock → GC pause → lock истёк → другой клиент получил → два holder'а;
@@ -571,12 +581,12 @@ end
 **Решения:**
 
 **1. Request coalescing (singleflight):**
-```redis
-# Первый запрос устанавливает lock, остальные ждут
-SET lock:resource 1 NX EX 5
-# Если OK → загрузить из DB → SET в кэш → DEL lock
-# Если не OK → спать 100ms → повторить GET из кэша
-```
+Для каждой попытки захвата клиент генерирует новый уникальный случайный `token` (например, UUIDv4), не константу.
+Клиент выполняет `SET` для ключа `lock:resource` со значением этого токена и опциями `NX EX 5`.
+Если OK → загрузить из DB → SET в кэш → снять lock Lua-скриптом из вопроса №12:
+`KEYS[1] = lock:resource`, `ARGV[1] = token` этой попытки. Только атомарный compare-and-delete:
+обычный `DEL` после истечения TTL может удалить lock нового владельца.
+Если не OK → спать 100ms → повторить GET из кэша.
 
 В Go: `golang.org/x/sync/singleflight` — in-process, для distributed — Redis lock.
 
@@ -653,7 +663,7 @@ if tokens >= requested then
 end
 
 -- Save state
-redis.call('HMSET', key, 'tokens', tokens, 'timestamp', now)
+redis.call('HSET', key, 'tokens', tokens, 'timestamp', now)  -- HMSET deprecated с Redis 4.0
 redis.call('EXPIRE', key, math.ceil(capacity / refill_rate * 2))  -- auto-cleanup
 
 return allowed
@@ -778,6 +788,7 @@ func cacheGet(key string) ([]byte, error) {
 </details>
 
 ---
+
 ### Задача №2: [ Настройка Redis Cluster в Kubernetes (StatefulSet) ] ![Static Badge](https://img.shields.io/badge/Senior-red)
 
 <details>
@@ -935,7 +946,7 @@ CLUSTER KEYSLOT mykey   # слот для ключа
 SCAN 0 MATCH user:* COUNT 100   # безопасный scan (не KEYS!)
 DBSIZE                  # количество ключей
 TYPE key                # тип ключа
-OBJECT ENCODING key     # внутренняя структура (ziplist, hashtable, etc.)
+OBJECT ENCODING key     # внутренняя структура (listpack, hashtable, skiplist, etc.; до Redis 7 — ziplist)
 ```
 
 </details>

@@ -526,7 +526,7 @@
   * `increase(http_requests_total[1h])` — сколько за час.
 * **Aggregation:**
   * `sum by (service) (rate(http_requests_total[5m]))` — RPS per service.
-  * `avg by (method) (http_request_duration_seconds_bucket{le="0.1"})` — avg.
+  * `avg by (method) (rate(http_request_duration_seconds_sum[5m]) / rate(http_request_duration_seconds_count[5m]))` — средняя латентность по методу.
 * **Histogram quantile:**
   * `histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))` — p99 latency.
 * **Arithmetic:**
@@ -618,7 +618,7 @@
 * **SLI (Service Level Indicator)** — метрика качества сервиса.
   * Пример: "доля HTTP-ответов со статусом < 500" или "p99 latency < 200ms".
 * **SLO (Service Level Objective)** — целевое значение SLI.
-  * Пример: "99.9% запросов за 28 дней успешны" (error budget = 0.1%).
+  * Пример: "99.9% запросов за 30 дней успешны" (error budget = 0.1%).
   * Внутренняя цель команды.
 * **SLA (Service Level Agreement)** — контракт с клиентом.
   * Пример: "99.5% uptime в месяц, иначе компенсация $X."
@@ -920,6 +920,78 @@
   * Cost optimization: "эта функция потребляет 30% CPU — оптимизировать".
 * **Low overhead:** sampling каждые 10-60s, overhead < 1%. Safe for prod.
 * **Инструменты:** Pyroscope (open source), Parca (eBPF), Datadog Profiler, Grafana Pyroscope.
+
+</details>
+
+---
+
+</details>
+
+---
+
+## 9. Инструментация Go-приложений
+
+<details>
+<summary><b>Развернуть раздел</b></summary>
+
+---
+
+### Вопрос №33: [ Как собирать метрики Go-рантайма? ]
+
+<details>
+<summary>Ответ</summary>
+
+* **`runtime/metrics`** (Go 1.16+) — рекомендуемый способ из стандартной библиотеки.
+  * Стабильные, документированные метрики; полный список даёт `runtime/metrics.All()`.
+  * Ключевые примеры:
+    * `/sched/goroutines:goroutines` — число живых горутин.
+    * `/memory/classes/heap/objects:bytes` — занятая куча.
+    * `/gc/pauses:seconds` — гистограмма пауз GC.
+    * `/sched/latencies:seconds` — распределение задержек планировщика.
+  * Чтение не останавливает мир (без stop-the-world), дёшево в горячем пути.
+* **`runtime.ReadMemStats`** — старый способ; на время вызова делает stop-the-world (кратко останавливает все горутины). Не вызывать в горячем пути, предпочитать `runtime/metrics`.
+* **`expvar`** — стандартная библиотека, публикует переменные в `/debug/vars` (JSON). Удобно для отладки и простых сервисов без Prometheus.
+* **`GODEBUG=gctrace=1`** — печатает трейсы GC в stderr: длительность, освобождённая память, размер кучи. Быстрая диагностика без изменения кода.
+* **Prometheus Go collector** — `prometheus/client_golang` автоматически экспонирует `go_goroutines`, `go_memstats_*`, `go_gc_*`. Начиная с клиента 1.12+ коллектор построен поверх `runtime/metrics` и больше не вызывает `ReadMemStats` на каждый scrape.
+* **Практика:** метрики рантайма + бизнес/RED-метрики сервиса + `net/http/pprof` для профилей по запросу.
+
+*Версионные отличия:* до Go 1.16 нет `runtime/metrics` — доступны только `ReadMemStats` и `expvar`.
+
+</details>
+
+---
+
+### Вопрос №34: [ Что такое log/slog? Структурированное логирование в стандартной библиотеке ]
+
+<details>
+<summary>Ответ</summary>
+
+* **`log/slog`** (Go 1.21+) — структурированное логирование в стандартной библиотеке: пары ключ-значение вместо конкатенации строк.
+* **Архитектура:**
+  * `Logger` — фронтенд, который создаёт записи и передаёт их хэндлеру.
+  * `Handler` — интерфейс формата и вывода. Встроенные: `TextHandler` (разработка) и `JSONHandler` (production, легко парсить в ELK/Loki).
+  * `Attr` и `Group` — атрибуты и их группировка в иерархию.
+* **Ключевые приёмы:**
+  ```go
+  logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+  logger = logger.With("service", "billing")
+  logger.Info("order created", "order_id", 42, slog.Int("retries", 0))
+  ```
+  * `With` / `WithGroup` — дочерний логгер с фиксированными полями (request_id, trace_id).
+  * `LogValuer` — отложенное вычисление значения: оно не считается, если запись отброшена по уровню.
+* **Кастомный хэндлер** — реализовать `slog.Handler`; так пишут вывод в Kafka/Loki, корпоративный формат или обёртку над другим логгером.
+* **Сравнение со сторонними библиотеками:**
+
+  | Библиотека | Особенности |
+  |-----------|-------------|
+  | `log/slog` | Стандартная библиотека (1.21+), ноль зависимостей, расширяемая |
+  | `zap` (Uber) | Быстрее по аллокациям, зрелая экосистема |
+  | `zerolog` | Zero-allocation, JSON-first |
+  | `logrus` | Legacy, режим поддержки |
+
+* **Что выбирать:** новые проекты на Go 1.21+ — `slog` (есть мосты в OpenTelemetry Logs — `otelslog`). Миграция с zap/zerolog не обязательна: существуют адаптеры `slog` в обе стороны.
+
+*Версионные отличия:* до Go 1.21 стандартом был только `log.Logger` без уровней и структуры — использовали zap/zerolog/logrus.
 
 </details>
 

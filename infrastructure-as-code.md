@@ -295,7 +295,8 @@ Chef, SaltStack, Pulumi, GitOps (ArgoCD, Flux), CI/CD и best practices.
   * Terraform fetch'ит атрибуты ресурса и записывает в state.
   * **Но не создаёт config!** Нужно вручную написать `resource "aws_instance" "web" {...}` и
     убедиться, что `plan` показывает no changes.
-* **Проблема:** некоторые ресурсы не поддерживают import (с TF 1.5+ поддержка расширена, проверять документацию provider'а).
+* **Проблема:** некоторые ресурсы не поддерживают import (зависит от provider'а, проверять документацию).
+  С TF 1.5+ доступен декларативный блок `import {}` в конфигурации — в дополнение к команде `terraform import`.
 * **Mass import:** `terraformer` (Google) — генерация HCL из существующей инфраструктуры.
 
 </details>
@@ -772,8 +773,17 @@ Chef, SaltStack, Pulumi, GitOps (ArgoCD, Flux), CI/CD и best practices.
 * **OIDC:** GitHub Actions → AWS через OIDC (no long-lived keys):
   ```yaml
   permissions:
-    id-token: write
+    id-token: write   # нужно для обмена токена на временные креды
+    contents: read
+  jobs:
+    terraform:
+      steps:
+        - uses: aws-actions/configure-aws-credentials@v4
+          with:
+            role-to-assume: arn:aws:iam::123456789012:role/gha-terraform
+            aws-region: eu-central-1
   ```
+  (Роль в IAM настраивается с trust policy на федерацию `token.actions.githubusercontent.com`.)
 * **Branch protection:** main — protected. Apply только из main. Plan — из любой ветки.
 
 </details>
@@ -827,7 +837,8 @@ Chef, SaltStack, Pulumi, GitOps (ArgoCD, Flux), CI/CD и best practices.
          main.tf
          terraform.tfvars
      ```
-     * Плюс: полная изоляция. Минус: дублирование.
+     * Плюс: раздельные root configurations. State изолирован только при отдельных backend/state keys;
+       разные каталоги с одним backend key используют общий state. Минус: дублирование.
   2. **Workspaces:**
      ```bash
      terraform workspace new prod
@@ -836,22 +847,33 @@ Chef, SaltStack, Pulumi, GitOps (ArgoCD, Flux), CI/CD и best practices.
      ```
      * Плюс: один код. Минус: state в одном backend, сложно audit. **Не рекомендуется для
        prod** (risk of applying prod config to dev workspace).
-  3. **Modules + tfvars:**
-     ```
+  3. **Modules + tfvars:** общие модули, отдельные root configurations окружений:
+     ```text
      modules/
        vpc/
        rds/
      environments/
-       dev.tfvars
-       prod.tfvars
-     main.tf  # один файл, использует модули
+       dev/
+         main.tf
+         terraform.tfvars
+       prod/
+         main.tf
+         terraform.tfvars
      ```
-     ```bash
-     terraform apply -var-file=environments/prod.tfvars
-     ```
-     * Плюс: DRY, изоляция state. Минус: нужен discipline.
+     Оба `main.tf` вызывают общие модули. Пример раздельных ключей в remote backend:
+
+     | Root configuration | Backend key |
+     |---|---|
+     | `environments/dev` | `dev/terraform.tfstate` |
+     | `environments/prod` | `prod/terraform.tfstate` |
+
+     * До plan/apply каждый root должен быть инициализирован со своим backend key;
+       проверьте выбранные backend/state и окружение. Модули и разные `-var-file` сами по себе
+       state не изолируют: tfvars меняют только значения переменных.
+     * Плюс: DRY. Изоляция state обеспечивается отдельной настройкой backend, а не модулями.
 * **Best practice:** directories (подход 1) или modules + tfvars (подход 3). Не workspaces для
-  prod.
+  prod. Для prod нужны отдельные credentials/роли и права на state и ресурсы:
+  dev/staging credentials не должны иметь доступа к prod. Разные state keys сами по себе права не разделяют.
 
 </details>
 
@@ -918,10 +940,11 @@ Chef, SaltStack, Pulumi, GitOps (ArgoCD, Flux), CI/CD и best practices.
   import * as aws from "@pulumi/aws";
   const bucket = new aws.s3.Bucket("my-bucket", {
     bucket: "my-bucket",
-    acl: "private",
   });
   export const bucketName = bucket.id;
   ```
+  (Свойство `acl` убрано: с @pulumi/aws v5 оно deprecated, в v6 удалено — новые бакеты
+  по умолчанию создаются с отключёнными ACL; управление доступом — через bucket policy.)
 * **Отличия от Terraform:**
   | | Pulumi | Terraform |
   |--|--------|-----------|
@@ -1107,7 +1130,9 @@ Chef, SaltStack, Pulumi, GitOps (ArgoCD, Flux), CI/CD и best practices.
   # Использовать outputs
   vpc_id = data.terraform_remote_state.network.outputs.vpc_id
   ```
-* **Размер state:** правило — < 200 ресурсов на state file. Больше — делить.
+* **Размер state:** жёсткого лимита нет, но большой state замедляет plan/apply и повышает
+  риск коллизий при блокировках. Эмпирическое правило из сообщества — держать несколько сотен
+  ресурсов на state и делить дальше (модули, разделение по окружениям/слоям).
 
 </details>
 

@@ -14,29 +14,29 @@
 |------|---------|-----------------|
 | [README.md](README.md) | Главная страница (ссылки на перенесённые разделы) | 0 |
 | [algorithms.md](algorithms.md) | Алгоритмы (сортировка, поиск, внешняя сортировка, анализ сложности) | 3 |
-| [sql-postgres-questions.md](sql-postgres-questions.md) | Базы данных, SQL, PostgreSQL (внутреннее устройство, оптимизация, практика) | 79 |
-| [go-questions.md](go-questions.md) | Golang (Map/Swiss Tables, GC, планировщик, горутины, sync, дженерики, reflection, практика) | 177 |
+| [sql-postgres-questions.md](sql-postgres-questions.md) | Базы данных, SQL, PostgreSQL (внутреннее устройство, оптимизация, практика) | 99 |
+| [go-questions.md](go-questions.md) | Golang (Map/Swiss Tables, GC, планировщик, горутины, sync, дженерики, reflection, практика) | 185 |
 | [system-design-questions.md](system-design-questions.md) | System Design (CAP, шардирование, масштабирование, практические примеры систем, принципы и методологии, общие темы) | 37 |
-| [redis-questions.md](redis-questions.md) | Redis (внутреннее устройство, репликация, кластер, паттерны), in-memory хранилища (сравнение) | 20 |
-| [devops-questions.md](devops-questions.md) | Docker, Kubernetes (архитектура, операции, практические задачи), Deployment, Cloud, Виртуализация | 32 |
-| [go-testing-tooling.md](go-testing-tooling.md) | Go testing (table tests, benchmarks, fuzzing, mocking, integration testing) | 42 |
-| [message-brokers.md](message-brokers.md) | Kafka, RabbitMQ, NATS, SQS/SNS, EventBridge (архитектура, паттерны, сравнение, exactly-once) | 46 |
-| [api-design.md](api-design.md) | API Design (REST, GraphQL, gRPC, versioning, pagination, authentication) | 38 |
+| [redis-questions.md](redis-questions.md) | Redis (внутреннее устройство, репликация, кластер, паттерны), in-memory хранилища (сравнение) | 22 |
+| [devops-questions.md](devops-questions.md) | Docker, Kubernetes (архитектура, операции, практические задачи), Deployment, Cloud, Виртуализация | 36 |
+| [go-testing-tooling.md](go-testing-tooling.md) | Go testing (table tests, benchmarks, fuzzing, mocking, профилирование, линтеры, нагрузочное тестирование) | 44 |
+| [message-brokers.md](message-brokers.md) | Kafka, RabbitMQ, NATS, SQS/SNS, EventBridge (архитектура, паттерны, сравнение, exactly-once, Go-клиенты) | 47 |
+| [api-design.md](api-design.md) | API Design (REST, GraphQL, gRPC, versioning, pagination, authentication) | 36 |
 | [linux-internals.md](linux-internals.md) | Linux internals (процессы, IPC, файловая система, cgroups, namespaces, eBPF) | 49 |
-| [db-operations.md](db-operations.md) | DB Operations (миграции, бэкапы, репликация, шардирование, VACUUM, сравнение БД, практики) | 43 |
+| [db-operations.md](db-operations.md) | DB Operations (миграции, бэкапы, репликация, шардирование, VACUUM, сравнение БД, Go и базы данных) | 25 |
 | [security.md](security.md) | Security (OWASP, аутентификация, авторизация, шифрование, secrets, network security) | 54 |
-| [observability.md](observability.md) | Observability (метрики, логи, трейсы, OpenTelemetry, Prometheus, SLO/SLI) | 32 |
+| [observability.md](observability.md) | Observability (метрики, логи, трейсы, OpenTelemetry, Prometheus, SLO/SLI, инструментация Go-приложений) | 34 |
 | [infrastructure-as-code.md](infrastructure-as-code.md) | IaC (Terraform, Ansible, Puppet, Chef, SaltStack, Pulumi, GitOps, CI/CD, state management, best practices) | 38 |
 | [serverless.md](serverless.md) | Serverless (AWS Lambda, Step Functions, Serverless БД, patterns, cost optimization) | 42 |
 | [networking.md](networking.md) | Сеть (TCP/IP, HTTP, DNS, DHCP, CIDR, VPN, Load Balancing), сетевые инструменты | 12 |
-| [programming-concepts.md](programming-concepts.md) | Общие концепции программирования (парадигмы, SOLID, дизайн-паттерны) | 5 |
+| [programming-concepts.md](programming-concepts.md) | Общие концепции программирования (парадигмы, SOLID, дизайн-паттерны) | 4 |
 | [git-questions.md](git-questions.md) | GIT (основы, ветвление, коммиты, force push, clean) | 13 |
 
 1️⃣ Настоятельно рекомендую, прежде чем открывать ответ на вопрос попробовать ответить на него самостоятельно.  
 2️⃣ Если ответить не получается, попробуйте выдумать ответ основываясь на уже имеющихся у вас знаниях.  
 3️⃣ И только если вы в полном ступоре открывайте ответ на вопрос.  
 
-▶️ У практических задач рядом с вопросом будет стоять сложность: ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen) ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow) ![Static Badge](https://img.shields.io/badge/Holy_Moly-red) 
+▶️ У практических задач рядом с вопросом будет стоять сложность: ![Static Badge](https://img.shields.io/badge/Easy_peasy-brightgreen) ![Static Badge](https://img.shields.io/badge/Wow-yellow?color=yellow) ![Static Badge](https://img.shields.io/badge/Holy_Moly-red)
 
 ---
 
@@ -59,11 +59,13 @@ P.S.S.
 Давайте поможем друг другу и новичкам пришедшим в мир IT 🙌
 
 ---
+
 <p align="center">
   <img src="https://github.com/DrrBurger/Photos_for_git/blob/master/Untitled-1.png" alt="logo">
 </p>
 
 ---
+
 ### 1️⃣ Общие темы:
 
 #### Перенесённые разделы

@@ -61,7 +61,9 @@
   То есть: `if P then (A or C) else (L or C)`.
   - Cassandra: PA/EL — при разделении предпочитает availability, при нормальной работе — low latency;
   - Spanner: PC/EC — при разделении отказывает, при нормальной работе — strong consistency;
-  - MongoDB: PC/EC (с majority read concern).
+  - MongoDB: PA/EC по умолчанию (предпочитает availability при разделении); с `majority`
+    write/read concern консистентность усиливается, но классификация остаётся ближе к PA/EL или
+    условно «строже», а не строгой линеаризуемости.
 
 </details>
 
@@ -224,7 +226,7 @@
 
   | Проблема | Решение |
   |----------|---------|
-  | **Message ordering** (гарантия порядка в групповом чате) | Vector clocks / Lamport timestamps; server-assigned monotonic sequence per conversation |
+  | **Message ordering** (гарантия порядка в групповом чате) | Server-assigned monotonic sequence per conversation (тотальный порядок); vector clocks / Lamport timestamps — только причинно-следственный (частичный) порядок |
   | **At-least-once delivery** (дубликаты) | Idempotency key (client_message_id); dedup на сервере |
   | **Presence spam** (миллионы presence-обновлений) | Debounce (обновлять presence раз в 30с); lazy presence (только когда кто-то смотрит) |
   | **Group fan-out** (1 сообщение → 1000 получателей) | Async fan-out через Kafka; batch writes в Cassandra |
@@ -312,6 +314,8 @@
   ```
 
 * **Подходы к резервированию:**
+  Во всех вариантах, включая saga, переходы брони защищает БД: проверка статуса, владельца/токена
+  и срока действия атомарна с изменением; блокировка или событие сами по себе этого не заменяют.
 
 * **Вариант 1 — Pessimistic locking (БД):**
   `SELECT * FROM seats WHERE id = ? FOR UPDATE` — блокировка строки на уровне БД.
@@ -320,22 +324,37 @@
   - Подходит: низкая конкуренция, мало одновременных бронирований.
 
 * **Вариант 2 — Optimistic locking (version field):**
+  Параметризованные запросы PostgreSQL. Резервирование с новым уникальным `reservation_token`
+  и подтверждение после оплаты — отдельные короткие транзакции, не транзакция на всё время оплаты.
   ```sql
-  UPDATE seats SET status='booked', version=version+1
-  WHERE id=? AND version=?
+  UPDATE seats
+  SET status='held', reservation_token=$1, user_id=$2,
+      hold_until=clock_timestamp() + INTERVAL '5 minutes', version=version+1
+  WHERE id=$3 AND version=$4
+    AND (status='free' OR (status='held' AND hold_until<=clock_timestamp()));
+
+  UPDATE seats SET status='sold', version=version+1
+  WHERE id=$1 AND version=$2 AND status='held'
+    AND reservation_token=$3 AND user_id=$4 AND hold_until>clock_timestamp();
   ```
+  - Для каждого перехода проверить `rows affected = 1` и commit; ноль строк — конфликт,
+    истёкшая или чужая бронь, а не успех. Одного совпадения `version` недостаточно;
   - Плюс: нет долгих блокировок; хорошо при низкой конкуренции;
   - Минус: retry при конфликте; при flash sale — 99% запросов получат конфликт → retry storm.
 
-* **Вариант 3 — Redis distributed lock (рекомендуется):**
-  ```redis
-  SET lock:seat:{show_id}:{seat_id} {user_id} NX EX 300
-  ```
-  - Бронирование места на 5 минут (TTL) в Redis (атомарно, O(1));
-  - Если получилось — место зарезервировано, пользователь идёт на оплату;
-  - Если не получилось — место занято, предложить другое;
-  - После оплаты — статус меняется в БД на "sold"; lock снимается;
-  - Если не оплатил за 5 минут — TTL истекает, место освобождается (background sweeper).
+* **Вариант 3 — Redis distributed lock (только снижение конкуренции перед БД):**
+  Клиент выполняет `SET` для ключа, содержащего ID сеанса и места, с новым случайным
+  `acquisition_token` как значением и опциями `NX EX 300`.
+  - `acquisition_token` уникален для каждого захвата, это не `user_id`;
+  - Успех Redis SET ещё не означает бронь: сначала guarded atomic transition в БД,
+    как выше; только после commit пользователь идёт на оплату;
+  - БД — источник истины: статус, владелец, `reservation_token` и `hold_until` не дают
+    продать место дважды, даже если Redis недоступен или lock истёк;
+  - Redis TTL не освобождает бронь в БД. Истечение проверяется по времени БД;
+    sweeper/cancel освобождает только `held` с ожидаемым токеном (sweeper — ещё и истёкшую бронь),
+    проверяя число изменённых строк, чтобы не затронуть нового владельца;
+  - Снятие/продление Redis lock — атомарная проверка значения и DEL/EXPIRE (Lua),
+    только при совпадении своего `acquisition_token`; безусловный DEL опасен.
 
 * **Вариант 4 — Event sourcing / saga:**
   - Бронирование = событие; payment = событие; confirm = событие;
@@ -348,10 +367,10 @@
   |----------|---------|
   | **Flash sale** (10K пользователей на 1 сеанс одновременно) | Queue-based: запросы в Kafka → обработка по очереди; "virtual queue" (как Ticketmaster) |
   | **Seat holding abuse** (боты бронируют всё и не платят) | Captcha; pre-auth hold на карте; limit per user; bot detection |
-  | **Redis failover** (брони потеряны) | Persistence (AOF); fallback на БД pessimistic lock; idempotency (повторная запись не вредит) |
-  | **Payment timeout vs seat lock** | Seat lock TTL > payment timeout; webhook от платёжной системы для подтверждения; background job для очистки |
-  | **Partial booking** (хотим 3 места рядом) | Multi-lock: SETNX на все места в одной Lua-транзакции (all-or-nothing) |
-  | **Double-charging** (retry payment webhook) | Idempotency key в payment API; проверка статуса перед списанием |
+  | **Redis failover** (lock потерян) | Все запросы всё равно проходят условный переход в БД; AOF/Redis lock не обеспечивают no double-booking |
+  | **Payment timeout vs hold expiry** | Webhook/reconciliation сверяет платёж с `reservation_token`: уже подтверждённая тем же токеном бронь — прежний результат; действующая — условное подтверждение в БД; истёкшая/перехваченная — записать задачу идемпотентного возврата успешного платежа в БД, не продавать чужое место. Таймаут не доказывает отказ платежа |
+  | **Partial booking** (хотим 3 места рядом) | Авторитетна одна транзакция БД для всех мест: проверить переход каждой строки, при конфликте rollback всех. Redis Lua сначала проверяет доступность всех ключей и аргументы, затем пишет: Lua атомарна относительно других команд, но не откатывает уже выполненные записи при ошибке |
+  | **Double-charging** (retry payment webhook) | Стабильный idempotency key в payment API; дедупликация webhook и переход брони (или задача возврата) в одной транзакции БД, не отдельная проверка перед записью |
   | **Read-heavy (просмотр схемы зала)** | Кэш схемы зала в Redis/CDN; read replica БД для чтения; WebSocket для real-time обновления занятых мест |
   | **Гео-распределение** | Regional booking (seat inventory per region); global inventory sync через CDC |
 
@@ -432,7 +451,7 @@
 * **Replication:**
   - **Master-replica:** запись → master, чтение → replica; async replication;
   - **Quorum-based (Raft/Paxos):** запись → majority согласие; сильная консистентность;
-    дороже, но безопаснее (Redis Raft, CockroachDB-style).
+    дороже, но безопаснее (etcd, Consul, CockroachDB).
 
 * **Eviction policies:**
   - **LRU** (Least Recently Used) — стандарт для Memcached/Redis;
@@ -725,10 +744,10 @@
 
   | Проблема | Решение |
   |----------|---------|
-  | **Race condition** (два запроса с одним ключом одновременно) | Distributed lock (Redis SETNX) или unique constraint в БД |
-  | **Key storage TTL** | TTL > max retry window (обычно 24–48 часов); или permanent storage для критичных |
-  | **Partial execution + crash** | Состояние ключа: `in_progress` → `completed`/`failed`; при retry — проверить статус |
-  | **Network timeout** (запрос дошёл, ответ нет) | Клиент retry → сервер возвращает сохранённый результат |
+  | **Race condition** (два запроса с одним ключом одновременно) | Unique constraint на ключ в inbox/dedup: вставка ключа, бизнес-изменение и результат — одна транзакция БД; при конфликте не повторять изменение. Redis SETNX лишь объединяет попытки: нужны уникальный токен, TTL и атомарные compare-and-delete/renew; истечение lock не должно обходить защиту БД |
+  | **Key storage TTL** | Срок хранения ключа в БД и у внешнего провайдера покрывает всё окно retry (например, 24–48 часов); для критичных операций — долговременная запись. После истечения сначала сверить результат, не выполнять старую операцию вслепую |
+  | **Partial execution + crash** | Маркер до эффекта может потерять обработку, после — допускает дубли; `in_progress`/`completed` не закрывают окно. Для локального эффекта нужны одна транзакция БД и ack сообщения только после commit; для внешнего — стабильный idempotency key провайдера и reconciliation, не обещание exactly-once |
+  | **Network timeout** (запрос дошёл, ответ нет) | Клиент retry с тем же ключом: вернуть зафиксированный результат; если внешний эффект имеет неизвестный исход — сверить его у провайдера, а не списывать повторно с новым ключом |
   | **Different request body, same key** | Сохранять hash тела запроса → 422 Unprocessable Entity при mismatch |
 
 </details>
@@ -1533,8 +1552,8 @@
 <details>
 <summary>Ответ</summary>
 
-* Это инфраструктурный подход для решения задач взаимодействия между микросервисами. 
-  Суть подхода состоит в использовании специальных приложений-прокси (Sidecar) — они запускаются рядом с каждым сервисом, перехватывают его 
+* Это инфраструктурный подход для решения задач взаимодействия между микросервисами.
+  Суть подхода состоит в использовании специальных приложений-прокси (Sidecar) — они запускаются рядом с каждым сервисом, перехватывают его
       сетевые запросы и передают их "куда нужно".
   Sidecar не только обрабатывают коммуникации между сервисами, но и производят мониторинг и устраняют проблемы безопасности, то есть все, что
       может быть абстрагировано от отдельных сервисов.

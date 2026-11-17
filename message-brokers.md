@@ -215,12 +215,16 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 <details>
 <summary>Ответ</summary>
 
-* Publisher confirms — механизм, при котором брокер подтверждает producer'у, что сообщение принято
-  (записано и маршрутизировано).
-* Включается на канале: `channel.Confirm(false)`.
-* После публикации producer ждёт `channel.NotifyPublish` или `WaitForConfirms`.
-* Гарантия: если confirm получен — сообщение точно в очереди (или в persistence).
-* Без confirms — fire and forget (сообщение может потеряться при падении брокера).
+* Publisher confirms — подтверждение producer'у обработки публикации брокером, не обработки consumer'ом.
+* Включается на канале: `channel.Confirm(false)`; подписки на confirms (`channel.NotifyPublish`)
+  и returns (`channel.NotifyReturn`) регистрируются до публикации.
+* **Положительный confirm (`basic.ack`) возможен и для unroutable сообщения** — если ни одна
+  очередь не подошла. Публиковать с `mandatory=true`, обрабатывать `basic.return` вместе с confirms:
+  для unroutable сообщения return предшествует confirm; один ack не доказывает доставку в очередь.
+* Для сохранности нужны durable queue и persistent message; для persistent сообщения в durable queue
+  ack означает запись на диск, для quorum queue — подтверждение кворумом реплик.
+* При nack/timeout/обрыве соединения публикацию повторяют; потерянный confirm может привести к дублю.
+  Без confirms producer не знает, принял ли брокер сообщение.
 
 </details>
 
@@ -251,7 +255,7 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 <summary>Ответ</summary>
 
 * **Classic queue** — оригинальная реализация. Может быть durable, mirrored (HA).
-  Persistence — на диск (опционально). Mirroring устарело (deprecated с RabbitMQ 3.8, удалено в 4.0).
+  Persistence — на диск (опционально). Mirroring устарело (deprecated с 2021, эпоха RabbitMQ 3.9; удалено в 4.0).
 * **Quorum queue** — основана на Raft-консенсусе. Реплицируется на несколько узлов автоматически.
   Data safety выше, чем у mirrored classic queues. Перезапись при падении узла автоматическая.
   Не поддерживает some features (priority, TTL per message — ограниченно).
@@ -285,7 +289,8 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 * **Replica**: один partition имеет **leader** (обрабатывает чтение/запись) и **followers** (реплики).
 * **Consumer Group** — группа consumer'ов, каждый читает свой набор partition'ов.
   Если consumer падает, partition'ы перераспределяются (**rebalance**).
-* **ZooKeeper / KRaft** — координация кластера (с Kafka 3.3+ KRaft заменяет ZooKeeper).
+* **ZooKeeper / KRaft** — координация кластера: KRaft стал production-ready в Kafka 3.3,
+  а начиная с Kafka 4.0 ZooKeeper полностью удалён (остался только KRaft-режим).
 
 </details>
 
@@ -349,6 +354,9 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
   Происходит при: добавлении/удалении consumer'а, изменении количества partition'ов.
 * Во время rebalance — **stop the world** для consumer group: никто не читает.
 * **Cooperative rebalance** (с Kafka 2.4) — incremental: только затронутые partition'ы приостанавливаются.
+  В Kafka 4.0 GA — новый протокол ребаланса (KIP-848): назначение партиций на стороне сервера,
+  устраняет stop-the-world ребалансы. Но он **выключен по умолчанию** (`group.protocol=classic` остаётся
+  дефолтом), а клиентские ассигноры пока не реализованы.
 * **Static group membership** (`group.instance.id`) — consumer сохраняет свою идентичность при кратковременных
   отключениях, rebalance не происходит (до истечения `session.timeout.ms`).
 
@@ -419,12 +427,12 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 <details>
 <summary>Ответ</summary>
 
-* If there're more partitions than consumers in a group, some consumers will consume data from more than one partition. 
-* If there're more consumers in a group than partitions, some consumers will get no data. 
-* If you add new consumer instances to the group, they will take over some partitions from old members. 
+* If there're more partitions than consumers in a group, some consumers will consume data from more than one partition.
+* If there're more consumers in a group than partitions, some consumers will get no data.
+* If you add new consumer instances to the group, they will take over some partitions from old members.
 * If you remove a consumer from the group (or the consumer dies), its partition will be reassigned to other member.
-* You CANNOT have multiple consumers (in a consumer group) to consume data from a single partition. 
-    However, if there're more than one consumer group, the same partition can be consumed by one (and only one) consumer 
+* You CANNOT have multiple consumers (in a consumer group) to consume data from a single partition.
+    However, if there're more than one consumer group, the same partition can be consumed by one (and only one) consumer
     in each consumer group.
 
 </details>
@@ -436,8 +444,8 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 <details>
 <summary>Ответ</summary>
 
-* Partitions allow users to parallelize topics, meaning data for any topic can be divided over multiple brokers. 
-    In other words, the greater the parallelization the greater the throughput. 
+* Partitions allow users to parallelize topics, meaning data for any topic can be divided over multiple brokers.
+    In other words, the greater the parallelization the greater the throughput.
     On the other hand a partition will always be consumed completely by a single consumer.
     Therefore, in general, the more partitions there are in a Kafka cluster, the higher the throughput one can achieve.
 * increasing partition count simultaneously increases the number of open server files and leads to increased replication latency.
@@ -452,9 +460,10 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 <details>
 <summary>Ответ</summary>
 
-* Replication factor — количество копий каждого partition на разных брокерах.
+* Replication factor — количество реплик каждого partition на разных брокерах.
   По умолчанию `default.replication.factor=1` (рекомендуется установить 3 для продакшена).
-  Например, при RF=3 и 6 partition: 6 оригиналов + 2 копии каждого = 18 partition'ов на 3 брокерах.
+  Например, при RF=3 каждая партиция имеет 3 реплики (лидер + 2 фолловера);
+  для 6 партиций это 18 реплика-партиций, распределённых по брокерам.
 
 </details>
 
@@ -471,12 +480,37 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
   Yes provided you are increasing partitions.
 * 3. Will adding/removing partitions automatically take care of redistributing messages across the new partitions?
   As mentioned earlier removing partitions is not supported.
-  When you increase the number of partitions, the existing messages will remain in the same partitions as before 
-  only the new messages will be considered for new partitions (also depending on you partitioner logic). 
-  Increasing the partitions for a topic will trigger a cluster rebalance, where in the consumers and producers will get notified 
-  with the updated metadata of the topics. Producers will start sending messages to new partitions after receiving updated metadata 
+  When you increase the number of partitions, the existing messages will remain in the same partitions as before
+  only the new messages will be considered for new partitions (also depending on you partitioner logic).
+  Increasing the partitions for a topic will trigger a cluster rebalance, where in the consumers and producers will get notified
+  with the updated metadata of the topics. Producers will start sending messages to new partitions after receiving updated metadata
   and consumer rebalancer will redistribute the partitions among the consumers groups and resume consumption from the last committed offset.
   All this will happen under the hood, so you wont have to do any changes at client side.
+
+</details>
+
+---
+
+### Вопрос №13: [ Клиенты Kafka в Go: sarama, segmentio/kafka-go, franz-go, confluent-kafka-go — что выбрать? ] ![Static Badge](https://img.shields.io/badge/Senior-red)
+
+<details>
+<summary>Ответ</summary>
+
+* **franz-go** — самая полная реализация на чистом Go: поддержка свежих KIP (включая новые
+  протоколы транзакций и ребалансов), продуманный API, высокая производительность.
+  Де-факто выбор по умолчанию для новых проектов.
+* **segmentio/kafka-go** — минималистичный клиент с `Reader`/`Writer`, близкий по духу к
+  стандартной библиотеке; удобен для простых сценариев, но функциональность отстаёт.
+* **IBM/sarama** — исторически самый популярный; активно развивался, но имеет репутацию
+  сложного в отладке (тонкие места с сессиями/ребалансами). Часто встречается в легаси.
+* **confluent-kafka-go** — обёртка над `librdkafka` на C через cgo: максимум фич и боевой
+  опыт, но зависимость от C-библиотеки, сложнее сборки и кросс-компиляции
+  (см. вопрос про cgo в go-questions).
+* **Критерии выбора**: нужные протокольные фичи (транзакции, идемпотентный продюсер,
+  поддержка версии брокера), удобство работы с consumer group, операционный опыт команды,
+  чистый Go против cgo в инфраструктуре сборки.
+* **Независимо от клиента**: идемпотентность потребителя (см. вопрос про идемпотентный
+  consumer), явные коммиты оффсетов, мониторинг consumer lag (см. вопрос про Consumer Lag).
 
 </details>
 
@@ -549,7 +583,9 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 
 * **Amazon SQS** — managed очередь от AWS. Нет отдельного exchange/concept, просто queue.
 * **Standard queue** — no ordering, at-least-once (возможны дубли), практически unlimited throughput.
-* **FIFO queue** — ordering, exactly-once (с deduplication ID), до 3000 msg/s (TPS, с batching — больше).
+* **FIFO queue** — ordering, exactly-once обработка (дедупликация по `DeduplicationId` или
+  content-based, в пределах 5-минутного окна), до 3000 msg/s (TPS, с batching — больше).
+  Сама доставка остаётся at-least-once: при падении consumer'а сообщение может быть доставлено повторно.
 * **Visibility timeout** — после чтения сообщение становится невидимым для других consumer'ов на N секунд.
   Если не удалено (DeleteMessage) — снова видимым.
 * **Dead Letter Queue** — настраивается через RedrivePolicy (после N неудачных приёмов).
@@ -580,9 +616,10 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 * **At-least-once** — сообщение доставляется 1 или более раз. Дубли возможны, потерь нет.
   Реализация: manual ack после обработки, retries.
   Самый распространённый вариант в распределённых системах.
-* **Exactly-once** — сообщение доставляется ровно 1 раз. Идеально, но дорого.
-  Реализация: idempotent consumer + transactional outbox, или Kafka transactions (в пределах Kafka).
-  **На практике** — обычно это at-least-once + idempotent consumer = effectively-once.
+* **Exactly-once** — эффект обработки фиксируется ровно один раз в оговорённых границах,
+  например Kafka transactions в пределах Kafka; это не гарантия единственной доставки.
+  **На практике** — outbox с at-least-once публикацией + транзакционно идемпотентный consumer
+  дают effectively-once эффект в его БД, но не автоматически во внешних системах.
 
 </details>
 
@@ -593,12 +630,20 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 <details>
 <summary>Ответ</summary>
 
-* **Уникальный ID сообщения** (message_id, event_id) — хранить обработанные ID и проверять перед обработкой.
-* **В БД**: unique constraint на message_id в таблице processed_events, INSERT IGNORE / ON CONFLICT DO NOTHING.
-* **В Redis**: `SETNX message_id:xxx 1` с TTL.
-* **Idempotency key** — если бизнес-операция поддерживает (например, payment_id).
-* **Версионирование** — если событие содержит версию сущности, можно сравнить с текущей.
-* **Компенсационные действия** — если операция уже выполнена, вернуть тот же результат.
+* **Уникальный ID сообщения** (`message_id`, `event_id`) должен сохраняться при повторной доставке.
+* **В БД**: inbox/`processed_events` с unique constraint на ID. В **одной транзакции** вставить ID
+  (`INSERT ... ON CONFLICT DO NOTHING`), проверить, вставлена ли строка, и только для нового ID
+  выполнить бизнес-изменение. При конфликте — пропустить уже зафиксированную обработку;
+  при ошибке — rollback обоих изменений. Ack брокеру — **только после commit**.
+* Отдельно сохранённый маркер **до** эффекта может потерять обработку при падении; **после** —
+  допускает дубли. Состояния `INPROGRESS`/`completed` сами по себе не закрывают это окно.
+* **Внешние эффекты** (платёж, email) не входят в транзакцию БД: нужен стабильный idempotency key
+  провайдера и reconciliation при неизвестном исходе. Без поддержки провайдера обещать exactly-once нельзя.
+* **Redis SETNX** — лишь объединение конкурирующих попыток: `SET ... NX EX`, уникальный токен владельца,
+  атомарные compare-and-delete/renew и продуманный срок жизни. Потеря/истечение lock не должны обходить
+  дедупликацию в БД или у провайдера; Redis сам по себе не обеспечивает корректность обработки.
+* **Версионирование** — проверка версии и изменение сущности должны быть одним условным UPDATE.
+  Возврат сохранённого результата при повторе — идемпотентность, а не компенсация.
 
 </details>
 
@@ -611,19 +656,62 @@ args = {"x-dead-letter-exchange": "dlx", "x-dead-letter-routing-key": "failed"}
 
 * Проблема: обновить БД и отправить сообщение в брокер атомарно нельзя (две разные системы).
 * Решение: в одной транзакции БД — обновить данные **и** записать сообщение в **outbox** таблицу.
-* Отдельный процесс (Outbox Publisher / CDC) читает outbox и отправляет в брокер, помечая как отправленное.
+* **Кто создаёт `event_id`:** сервис, в котором произошло бизнес-событие, например генерирует UUID.
+  ID сохраняется вместе с событием в outbox под `PRIMARY KEY`/`UNIQUE`, попадает в сообщение
+  и без изменений используется relay при всех повторных публикациях и consumer при дедупликации.
+  Генерировать новый ID на каждой отправке или использовать broker delivery tag нельзя.
+* У нового события — новый ID. Повтор команды клиента не должен создавать то же событие с новым ID:
+  дедупликация исходной команды по idempotency key должна быть частью бизнес-транзакции.
+  ID команды и ID события — не обязательно одно и то же: одна команда может породить несколько событий.
+* Отдельный relay (Outbox Publisher / CDC) публикует запись в брокер. Для RabbitMQ отметку
+  «отправлено» ставить после положительного confirm с учётом `mandatory`/returns и нужной durability.
+  Если relay упал после публикации, но до отметки, или потерял confirm — публикация повторится:
+  сохранять `event_id`, а consumer делать идемпотентным.
 * **CDC** (Change Data Capture, например Debezium) — альтернатива поллингу: читает WAL БД и публикует изменения.
+
+В упрощённой схеме ниже `$1` — созданный сервисом ID события, передаваемый как параметр запроса.
+Бизнес-проверки операции и дедупликация команды выполняются в этой же транзакции.
 
 ```sql
 BEGIN;
 UPDATE accounts SET balance = balance - 100 WHERE id = 1;
 INSERT INTO outbox (event_id, aggregate_type, aggregate_id, payload, created_at)
-    VALUES ('evt-123', 'account', '1', '{"amount": 100}', now());
+    VALUES ($1, 'account', '1', '{"amount": 100}', now());
 COMMIT;
 ```
 
-* Плюсы: атомарность, нет dual-write проблемы.
-* Минусы: задержка (polling), сложность инфраструктуры (CDC).
+* **Polling relay с несколькими воркерами:**
+  1. В короткой транзакции выбрать ограниченную пачку готовых записей через `FOR UPDATE SKIP LOCKED`,
+     назначить каждой состояние `processing`, новый `owner_token` захвата и `lease_until`, затем commit.
+     Истёкшие `processing` тоже должны возвращаться в обработку — отдельным восстановлением
+     либо непосредственно запросом захвата; одного условия `status = 'pending'` недостаточно.
+  2. Публиковать **после commit**, не удерживая блокировки БД во время сетевого ожидания.
+     Ограничить параллелизм и timeout; размер пачки должен позволять уложиться в lease.
+     Для долгой работы продлевать ещё действующий lease только с проверкой текущего токена владельца.
+  3. После подтверждённой публикации отметить `sent` условным UPDATE по `event_id`,
+     `status = 'processing'`, своему `owner_token` и ещё действующему lease; проверить число изменённых строк.
+     При потере владения не менять состояние чужой попытки. Сам токен защищает запись в БД,
+     но не запрещает старому воркеру отправить сообщение в брокер: дубликаты всё ещё возможны.
+  4. При ошибке сохранять число попыток и время следующей попытки с exponential backoff и jitter;
+     менять состояние только при сохранённом владении. После истечения lease запись подберёт
+     восстановление. Неисправимые события помещать в состояние ошибки с оповещением и возможностью
+     ручного повтора, а не молча удалять. Повтор сохраняет исходный `event_id`.
+  5. При остановке перестать брать новые записи и ограниченно дождаться текущих публикаций.
+     Неизвестный исход (timeout, потерянный confirm, падение) означает возможную повторную отправку,
+     а не доказательство, что сообщение не было доставлено.
+* **Порядок:** `ORDER BY created_at` вместе с `SKIP LOCKED` не гарантирует порядок публикации:
+  несколько воркеров и retry могут отправить более позднее событие раньше. Для порядка внутри
+  одной сущности нужны версия/sequence, сериализация её публикаций и соответствующий ключ
+  партиции брокера. Следующее событие сущности нельзя отправлять раньше подтверждения предыдущего,
+  но поздние дубли всё равно требуют дедупликации и проверки версии у consumer.
+* Для самого механизма захвата см. «Задача №2: Построить job queue на PostgreSQL»
+  в [разделе PostgreSQL](sql-postgres-questions.md); для outbox дополнительно нужны правила
+  владения, подтверждения публикации и повторов, описанные выше.
+* **Мониторинг:** возраст самого старого неотправленного события, размер очереди, число retry,
+  истёкших lease и событий в состоянии ошибки.
+* Плюсы: атомарность **только бизнес-данных и outbox внутри БД**, нет dual-write проблемы;
+  общей транзакции с брокером нет, publisher confirms её не создают.
+* Минусы: задержка (polling), сложность инфраструктуры (CDC), возможные дубли от relay.
 
 </details>
 
@@ -847,7 +935,9 @@ COMMIT;
   - **Request/reply** — RPC поверх очереди (reply-to queue).
   - **TTL + DLQ** — автоматическое истечение и dead-lettering.
   - **Малый-средний объём** — тысячи до сотен тысяч сообщений/сек.
-  - **Transactional outbox** — публикация событий в рамках транзакции (publisher confirms).
+  - **Transactional outbox** — relay публикует с confirms, `mandatory`/returns и durable queue +
+    persistent messages; атомарны только данные и outbox в БД, не публикация в RabbitMQ.
+    Дубли relay требуют идемпотентного consumer; этот паттерн применим и к Kafka.
 
 * **Оба подходят, но с нюансами:**
   - **Microservices events** — Kafka для event streaming между сервисами, RabbitMQ для
@@ -921,7 +1011,8 @@ COMMIT;
 * **NATS** — lightweight, высокопроизводительный message bus (Go).
   - **Core NATS:** at-most-once, fire-and-forget, ~1M+ msg/сек на один сервер.
   - **JetStream:** persistence, at-least-once, streams (аналог Kafka topics), consumers,
-    exactly-once (через dedup window).
+    exactly-once на стороне публикации (дедупликация по `Nats-Msg-Id` в пределах окна);
+    доставка потребителю — at-least-once, поэтому end-to-end нужна идемпотентность consumer'а.
   - **Subjects** вместо queues/topics — wildcard подписки (`orders.*.created`).
   - **Leaf nodes** — bridge между кластерами NATS (edge computing, multi-region).
 
@@ -952,7 +1043,7 @@ COMMIT;
 
 * **Managed (SQS/SNS/EventBridge):**
   - **SQS** — queue (аналог RabbitMQ queue). Standard (at-least-once, no ordering) и FIFO
-    (exactly-once, ordered, 3000 msg/сек).
+    (exactly-once обработка с дедупликацией, ordered, 3000 msg/сек).
   - **SNS** — pub/sub (аналог RabbitMQ fanout). Push to SQS, Lambda, HTTP, email.
   - **EventBridge** — event bus + rule-based routing (аналог RabbitMQ topic exchange, но
     с JSON content filtering).

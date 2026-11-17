@@ -1184,7 +1184,7 @@
   srv := &http.Server{
       TLSConfig: &tls.Config{
           MinVersion:               tls.VersionTLS12,
-          PreferServerCipherSuites: true,
+          PreferServerCipherSuites: true, // deprecated с Go 1.17 — порядок сервера всегда включён
           CurvePreferences:         []tls.CurveID{tls.X25519, tls.CurveP256},
       },
       ReadHeaderTimeout: 5 * time.Second,  // slowloris protection
@@ -1237,18 +1237,27 @@
 <details>
 <summary>Ответ</summary>
 
-* **Path traversal:** никогда не использовать пользовательский ввод напрямую в пути файла.
-  * Плохо: `filepath.Join(baseDir, userInput)`.
-  * Лучше: проверить, что результат внутри baseDir:
-    ```go
-    fullPath := filepath.Join(baseDir, userInput)
-    if !strings.HasPrefix(filepath.Clean(fullPath), filepath.Clean(baseDir)+string(os.PathSeparator)) {
-        return errors.New("path traversal detected")
-    }
-    ```
-* **Symlink attack:** `os.Open` следует по symlinks. Проверять `os.Lstat` перед открытием.
-* **TOCTOU:** между проверкой (stat) и использованием (open) файл может быть заменён. Использовать
-  `O_NOFOLLOW` (открыть файл, не следуя symlink) или `os.OpenFile` с `O_NOFOLLOW`.
+* **Path traversal / symlink / TOCTOU:** `filepath.Join` и проверка строкового префикса не защищают
+  от выхода через symlink. Между `os.Lstat` и `os.Open` путь может быть подменён;
+  `O_NOFOLLOW` защищает лишь последний компонент, не промежуточные каталоги.
+* **Go 1.24+:** для недоверенного относительного имени используйте `os.OpenRoot` с доверенным `baseDir`:
+  ```go
+  import "os"
+
+  func openSafeFile(baseDir, name string) (*os.File, error) {
+      root, err := os.OpenRoot(baseDir)
+      if err != nil {
+          return nil, err
+      }
+      defer root.Close()
+      return root.Open(name)
+  }
+  ```
+  Вызывающий код закрывает возвращённый файл. `root.Open` допускает symlinks, остающиеся внутри
+  root, но запрещает выход через `..` или symlinks. Это не sandbox содержимого: API не проверяет
+  данные файла и не запрещает переход через mount points. На `GOOS=js` остаются TOCTOU-гонки;
+  на WASI защита зависит от реализации WASI.
+  Подробнее: [Traversal-resistant file APIs](https://go.dev/blog/osroot), [os.Root](https://pkg.go.dev/os#Root).
 * **Temp files:** `os.CreateTemp` (не `os.Create` с предсказуемым именем).
 * **File permissions:** `os.WriteFile(path, data, 0600)` — не world-readable для секретов.
 * **Limit file size:** `io.LimitReader` при чтении (защита от OOM при огромном файле).
@@ -1384,7 +1393,7 @@
   5. **Recovery** — восстановить сервисы, проверить целостность, monitor за аномалиями.
   6. **Lessons learned** — post-mortem. Что случилось, как, что улучшить. Обновить IR plan.
 * **Инструменты:**
-  * SIEM (Splunk, Elastic SIEM, Grafana Loki) — корреляция событий.
+  * SIEM (Splunk, Elastic Security, Wazuh) — корреляция событий.
   * EDR (CrowdStrike, SentinelOne) — endpoint detection & response.
   * IR runbooks — пошаговые инструкции для типовых инцидентов.
 * **Ключевой принцип:** не уничтожать evidence. Сохранить logs, memory dumps, disk images.

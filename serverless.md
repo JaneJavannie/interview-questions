@@ -419,12 +419,18 @@ Azure Functions), serverless базы данных, event-driven patterns, cold 
 * **Реализация в Serverless:**
   * **DynamoDB / ElastiCache** — хранить счётчик ошибок и состояние (closed/open/half-open).
   * ```
-    Lambda → check circuit state (DynamoDB)
-          → if OPEN: return fallback immediately
+    Lambda → read state and open_until (DynamoDB)
+          → if OPEN and now < open_until: return fallback
+          → if OPEN and now >= open_until: conditionally admit HALF_OPEN probe
           → if CLOSED: call API, on error increment counter
-          → if counter > threshold: set state to OPEN with TTL
+          → if counter > threshold: set OPEN, open_until = now + cooldown
     ```
-  * **TTL** — автоматический переход в half-open после таймаута.
+  * `open_until` проверяется явно при чтении. Conditional update по состоянию/версии допускает
+    ограниченное число half-open проб (например, одну); остальные вызовы получают fallback.
+    У пробы есть токен и deadline: только её владелец завершает переход в CLOSED при успехе
+    или OPEN с новым `open_until` при ошибке; зависшую пробу можно условно заменить после deadline.
+  * **DynamoDB TTL** — только необязательная очистка: удаление может задержаться на несколько дней,
+    это не таймер перехода в half-open. Живую запись состояния не удалять по `open_until`.
 * **Альтернатива:** AWS SDK built-in retry + exponential backoff.
 * **Step Functions** — Retry/Catch с ErrorEquals и backoff.
 
@@ -533,7 +539,7 @@ Azure Functions), serverless базы данных, event-driven patterns, cold 
 | **Layers** | До 5 |
 | **Environment variables** | 4 КБ |
 | **Payload (sync)** | 6 МБ |
-| **Payload (async)** | 256 КБ |
+| **Payload (async)** | 1 МБ (ранее — 256 КБ) |
 
 * Memory и CPU связаны: больше memory = больше vCPU (пропорционально).
 * При 1769 МБ — 1 full vCPU. При 10 ГБ — ~6 vCPU.
@@ -858,28 +864,56 @@ Azure Functions), serverless базы данных, event-driven patterns, cold 
   * Client retry (timeout → повторный запрос).
 * **Idempotency** — повторный вызов с тем же input даёт тот же результат без побочных эффектов.
 * **Реализация:**
-  1. **Idempotency key** — уникальный ID в запросе (`requestId`, `eventId`).
-  2. **Хранить обработанные ID** в DynamoDB (с TTL).
+  1. **Idempotency key** — стабильный ID бизнес-операции (`requestId`, `eventId`), один для всех retry,
+     не новый ID каждого запуска Lambda.
+  2. **Локальная бизнес-операция:** inbox/dedup с уникальным ключом и бизнес-изменение — в одной
+     транзакции БД (для DynamoDB — условная запись маркера и изменение данных через `TransactWriteItems`).
+     Ack/успех обработки сообщения — только после commit. Отдельный маркер до эффекта теряет обработку
+     при падении, после эффекта — допускает дубли; наивный get → work → put ещё и допускает гонку.
+  3. **AWS Lambda Powertools:** минимальный пример для прямого Lambda event с полями
+     `requestId`, `orderId`, `amount`, `currency` (не обёртка API Gateway/SQS). Он только формирует
+     данные для платёжного адаптера, **не выполняет списание**:
      ```python
+     from aws_lambda_powertools.utilities.idempotency import (
+         DynamoDBPersistenceLayer,
+         IdempotencyConfig,
+         idempotent,
+     )
+
+     persistence = DynamoDBPersistenceLayer(table_name="idem_table")
+     config = IdempotencyConfig(
+         event_key_jmespath="requestId",
+         payload_validation_jmespath="[orderId, amount, currency]",
+         raise_on_no_idempotency_key=True,
+         expires_after_seconds=86400,
+     )
+
+     @idempotent(config=config, persistence_store=persistence)
      def handler(event, context):
-         idem_key = event["requestId"]
-         # Check if already processed
-         response = table.get_item(Key={"id": idem_key})
-         if "Item" in response:
-             return response["Item"]["result"]
-         # Process
-         result = do_work(event)
-         # Save
-         table.put_item(Item={"id": idem_key, "result": result, "ttl": int(time.time()) + 86400})
-         return result
+         return {
+             "provider_idempotency_key": "payment:" + event["requestId"],
+             "orderId": event["orderId"],
+             "amount": event["amount"],
+             "currency": event["currency"],
+         }
      ```
-  3. **AWS Lambda Powertools** — built-in idempotency decorator:
-     ```python
-     @idempotency_persistence(config=DynamoDBConfig(table_name="idem_table"))
-     def handler(event, context):
-         return process_payment(event)
-     ```
-* **Важно:** TTL в DynamoDB — для автоматической очистки старых записей.
+     Нужны установленный Powertools, таблица `idem_table` с partition key `id` (String)
+     и права Lambda на GetItem/PutItem/UpdateItem/DeleteItem. Входные поля валидируются на границе API;
+     `payload_validation_jmespath` проверяет, что тот же ключ не используется с другим платёжным payload.
+     Реальный платёжный адаптер должен передавать `provider_idempotency_key` в механизм идемпотентности
+     выбранного провайдера при **каждой** попытке списания, не генерировать новый ключ при retry.
+  4. Powertools условно создаёт `INPROGRESS`, блокируя конкурентный вызов с тем же ключом;
+     активный дубликат получает `IdempotencyAlreadyInProgressError` и может быть повторён позже.
+     После успеха сохраняет `COMPLETE` и результат. `@idempotent` использует Lambda context для
+     `in_progress_expiration`: после истечения незавершённую попытку можно повторить.
+* **Граница гарантии:** `INPROGRESS`/`COMPLETE` не делают запись результата и внешний эффект атомарными.
+  Если провайдер списал деньги, а Lambda упала до сохранения результата, повтор снова дойдёт до провайдера.
+  Нужны его idempotency key и reconciliation (сверка статуса платежа) при неизвестном исходе;
+  Powertools сам по себе не гарантирует exactly-once списание и не заменяет транзакцию бизнес-данных.
+* **Срок хранения:** окно дедупликации в БД и у провайдера должно покрывать допустимые retry;
+  после его истечения старый ключ нельзя слепо использовать для нового списания — сначала сверка.
+  Powertools проверяет expiration явно. DynamoDB TTL на `expiration` — только отложенная очистка,
+  а не точный таймер и не гарантия идемпотентности.
 
 </details>
 
